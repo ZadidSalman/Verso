@@ -1,0 +1,20 @@
+# Secrets — never commit these
+.env
+.env.local
+*.env
+run.sh
+
+# Flutter
+.dart_tool/
+build/
+*.g.dart
+*.freezed.dart
+
+# Android
+android/local.properties
+android/key.properties
+*.jks
+
+# IDE
+.idea/
+.vscode/
