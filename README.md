@@ -54,3 +54,19 @@ Firebase Android config in CI is provided via repository secret:
 
 - Do not commit `google-services.json` to git.
 - Set required GitHub Actions secrets before running release builds.
+
+## Firebase CI secret setup
+
+Use this once to generate and validate `ANDROID_GOOGLE_SERVICES_JSON_B64`:
+
+```bash
+base64 -w 0 verso/android/app/google-services.json > /tmp/google-services.b64
+python3 - <<'PY'
+import base64, json
+s = open('/tmp/google-services.b64').read().strip()
+json.loads(base64.b64decode(s).decode())
+print('VALID')
+PY
+```
+
+If CI fails with `MalformedJsonException` or `base64: invalid input`, regenerate this value and update the repository secret.
