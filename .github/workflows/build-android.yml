@@ -1,4 +1,4 @@
-name: Build Android Release (AAB)
+name: Build Android Release (APK)
 
 on:
   push:
@@ -27,19 +27,19 @@ jobs:
         working-directory: verso
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build release AAB
+      - name: Build release APK
         working-directory: verso
         run: |
-          flutter build appbundle --release \
+          flutter build apk --release \
             --dart-define=API_URL=${{ secrets.API_URL }} \
             --dart-define=PUSHER_KEY=${{ secrets.PUSHER_KEY }} \
             --dart-define=PUSHER_CLUSTER=ap2 \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=POSTHOG_KEY=${{ secrets.POSTHOG_KEY }}
 
-      - name: Upload AAB artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-aab-${{ github.sha }}
-          path: verso/build/app/outputs/bundle/release/app-release.aab
+          name: release-apk-${{ github.sha }}
+          path: verso/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
