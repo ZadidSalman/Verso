@@ -29,6 +29,8 @@ verso/.flutter-plugins-dependencies
 verso/.pub/
 verso/.pub-cache/
 verso/build/
+!verso/build/
+!verso/build/**
 verso/coverage/
 verso/**/*.g.dart
 verso/**/*.freezed.dart
