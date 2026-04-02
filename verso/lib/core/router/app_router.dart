@@ -100,6 +100,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
+      // If error state, don't redirect - let user stay on current screen
+      if (authState is AuthError) {
+        return null;
+      }
+
       return null;
     },
 

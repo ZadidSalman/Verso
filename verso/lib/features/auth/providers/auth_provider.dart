@@ -56,13 +56,17 @@ class AuthNotifier extends Notifier<AuthState> {
 
     final isLoggedIn = await _repository.isLoggedIn();
     if (isLoggedIn) {
-      // In a real app, you'd fetch user profile here
-      // For now, we'll set as authenticated without user data
-      // The user data should be cached in Hive on login
-      state = const AuthUnauthenticated();
-    } else {
-      state = const AuthUnauthenticated();
+      // Try to fetch user profile
+      try {
+        final user = await _repository.getMe();
+        state = AuthAuthenticated(user);
+        return;
+      } catch (_) {
+        // Token expired or invalid - clear and go to unauthenticated
+        await _repository.logout();
+      }
     }
+    state = const AuthUnauthenticated();
   }
 
   /// Register a new user

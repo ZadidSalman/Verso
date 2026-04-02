@@ -122,4 +122,10 @@ class AuthRepository {
   Future<bool> isLoggedIn() async {
     return SecureStorage.isLoggedIn();
   }
+
+  /// Get current user profile
+  Future<AuthUser> getMe() async {
+    final response = await _dio.get('/api/users/me');
+    return AuthUser.fromJson(response.data['user'] as Map<String, dynamic>);
+  }
 }
