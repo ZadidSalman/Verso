@@ -31,7 +31,7 @@ jobs:
         working-directory: verso
         run: |
           flutter build apk --release \
-            --dart-define=API_URL=${{ secrets.API_URL }} \
+            --dart-define=API_URL=https://verso-zjri.onrender.com \
             --dart-define=PUSHER_KEY=${{ secrets.PUSHER_KEY }} \
             --dart-define=PUSHER_CLUSTER=ap2 \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
