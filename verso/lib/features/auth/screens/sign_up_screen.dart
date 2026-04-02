@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shapes.dart';
@@ -10,10 +11,6 @@ import '../providers/auth_provider.dart';
 /// Sign Up screen
 ///
 /// Design: BG-06 - Card on BG-02 background
-/// - Email input
-/// - Password input with show/hide toggle
-/// - "Begin your story" button
-/// - "Already a poet? Sign in" link
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
@@ -22,7 +19,6 @@ class SignUpScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -35,14 +31,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   void _onSubmit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      ref
-          .read(authProvider.notifier)
-          .register(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
-    }
+    ref
+        .read(authProvider.notifier)
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
   }
 
   @override
@@ -50,32 +44,25 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthLoading;
-
-    // Listen for errors
-    ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next is AuthError) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(next.message)));
-      }
-    });
+    final String? errorText = authState is AuthError ? authState.message : null;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // BG-02 background
-          Container(color: AppColors.background),
+          // BG-02 Overlay
           Positioned(
-            top: -80,
-            right: -80,
+            top: 0,
+            right: 0,
             child: Container(
-              width: 280,
-              height: 280,
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.width * 0.6,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: RadialGradient(
+                  center: Alignment.topRight,
+                  radius: 1.0,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.07),
+                    AppColors.primary.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -83,119 +70,246 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
           ),
           Positioned(
-            bottom: 60,
-            left: -60,
+            top: -40,
+            right: -40,
             child: Container(
-              width: 200,
-              height: 200,
+              width: 180,
+              height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.secondaryContainer.withValues(alpha: 0.25),
+                color: AppColors.primary.withValues(alpha: 0.03),
               ),
             ),
           ),
-          // Content
+          Positioned(
+            bottom: 80,
+            left: -60,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2 - 40,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+
+          // Back Button
+          SafeArea(
+            child: Semantics(
+              button: true,
+              label: 'Go back',
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, left: 8),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppRoutes.welcome);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // Main Content
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Card(
-                  elevation: 3,
-                  shape: AppShapes.lg,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Form(
-                      key: _formKey,
+                child: Semantics(
+                  label: 'Sign up form',
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    elevation: 3,
+                    shadowColor: Colors
+                        .transparent, // "Shadow: none — tonal elevation only"
+                    shape: AppShapes.lg,
+                    color: AppColors.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Begin your story',
-                            style: theme.textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Create your account to start writing.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            'Create your account',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontFamily:
+                                  'Playfair Display', // Since the theme might not have it strictly set yet, but per docs: Playfair
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 32),
-                          // Email field
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'poet@example.com',
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Email is required';
-                              }
-                              if (!value.contains('@')) {
-                                return 'Enter a valid email';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          // Password field
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _onSubmit(),
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              hintText: 'At least 8 characters',
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
+                          const SizedBox(height: 24),
+
+                          // Email Field
+                          Semantics(
+                                label: 'Email address',
+                                child: SizedBox(
+                                  height: 56,
+                                  child: TextField(
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(
+                                        Icons.email_outlined,
+                                        size: 20,
+                                      ),
+                                      hintText: 'your@email.com',
+                                      filled: true,
+                                      fillColor: AppColors.surfaceVariant,
+                                      border: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      focusedBorder: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                              )
+                              .animate(target: errorText != null ? 1 : 0)
+                              .shakeX(amount: 4, duration: 400.ms),
+
+                          const SizedBox(height: 16),
+
+                          // Password Field
+                          Semantics(
+                                label: 'Password',
+                                child: SizedBox(
+                                  height: 56,
+                                  child: TextField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    onSubmitted: (_) => _onSubmit(),
+                                    decoration: InputDecoration(
+                                      prefixIcon: const Icon(
+                                        Icons.lock_outline,
+                                        size: 20,
+                                      ),
+                                      hintText: 'At least 8 characters',
+                                      filled: true,
+                                      fillColor: AppColors.surfaceVariant,
+                                      border: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      focusedBorder: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      suffixIcon: AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
+                                        child: IconButton(
+                                          key: ValueKey(_obscurePassword),
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_outlined
+                                                : Icons.visibility_off_outlined,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .animate(target: errorText != null ? 1 : 0)
+                              .shakeX(amount: 4, duration: 400.ms),
+
+                          const SizedBox(height: 8),
+
+                          // Error Text
+                          if (errorText != null)
+                            Text(
+                              errorText,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.error,
+                              ),
+                            ).animate().fadeIn(duration: 200.ms),
+
+                          const SizedBox(height: 24),
+
+                          // Submit Button
+                          Semantics(
+                            button: true,
+                            label: 'Sign up button',
+                            child: SizedBox(
+                              height: 56,
+                              width: double.infinity,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  shape: AppShapes.sm,
+                                ),
+                                onPressed: isLoading ? null : _onSubmit,
+                                child: isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.surface,
+                                        ),
+                                      ).animate().fadeIn(duration: 200.ms)
+                                    : Text(
+                                        'Begin your story',
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(
+                                              color: AppColors.surface,
+                                            ),
+                                      ).animate().fadeIn(duration: 200.ms),
                               ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Password is required';
-                              }
-                              if (value.length < 8) {
-                                return 'Password must be at least 8 characters';
-                              }
-                              return null;
-                            },
                           ),
-                          const SizedBox(height: 32),
-                          // Submit button
-                          FilledButton(
-                            onPressed: isLoading ? null : _onSubmit,
-                            child: isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  )
-                                : const Text('Begin your story'),
-                          ),
+
                           const SizedBox(height: 16),
+
                           // Sign in link
-                          TextButton(
-                            onPressed: () => context.go(AppRoutes.signIn),
-                            child: const Text('Already a poet? Sign in'),
+                          Semantics(
+                            button: true,
+                            label: 'Navigate to sign in',
+                            child: Center(
+                              child: TextButton(
+                                onPressed: () =>
+                                    context.pushReplacement(AppRoutes.signIn),
+                                child: Text(
+                                  'Already a poet? Sign in',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

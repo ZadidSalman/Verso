@@ -23,10 +23,6 @@ enum _LanguageOption {
 /// Onboarding language screen - Step 3 of 3
 ///
 /// Design: BG-02 background
-/// - Progress indicator (3 dots, step 3 filled)
-/// - "What language do you write in?" headline
-/// - Column of 3 radio cards
-/// - "Take me to my feed" CTA
 class OnboardingLanguageScreen extends ConsumerStatefulWidget {
   const OnboardingLanguageScreen({super.key});
 
@@ -86,47 +82,122 @@ class _OnboardingLanguageScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final canSubmit = _selectedLanguage != null && !_isSubmitting;
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // BG-02: Background with sage glows
-          Container(color: AppColors.background),
-          // Top-right radial glow
+          // BG-02 Overlay
           Positioned(
-            top: -80,
-            right: -80,
+            top: 0,
+            right: 0,
             child: Container(
-              width: 280,
-              height: 280,
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.width * 0.6,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: RadialGradient(
+                  center: Alignment.topRight,
+                  radius: 1.0,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.07),
+                    AppColors.primary.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-          // Main content
+          Positioned(
+            top: -40,
+            right: -40,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 80,
+            left: -60,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2 - 40,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 24),
+
                   // Progress indicator - 3 dots, step 3 filled
-                  _buildProgressIndicator(currentStep: 3, totalSteps: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.outlineVariant),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.outlineVariant),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 48),
+
                   // Headline
                   Text(
                     'What language do you write in?',
-                    style: theme.textTheme.headlineSmall,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontFamily: 'Playfair Display',
+                    ),
                     textAlign: TextAlign.center,
                   ),
+
                   const SizedBox(height: 12),
+
                   // Subheadline
                   Text(
                     "This shapes what content you'll see in your feed.",
@@ -135,67 +206,92 @@ class _OnboardingLanguageScreenState
                     ),
                     textAlign: TextAlign.center,
                   ),
+
                   const SizedBox(height: 32),
+
                   // Language options
-                  ...List.generate(_LanguageOption.values.length, (index) {
-                    final option = _LanguageOption.values[index];
-                    final isSelected = _selectedLanguage == option;
-                    return Padding(
-                      padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
-                      child: _LanguageCard(
-                        option: option,
-                        isSelected: isSelected,
-                        onTap: () => setState(() => _selectedLanguage = option),
+                  Column(
+                    children: [
+                      _LanguageCard(
+                        option: _LanguageOption.english,
+                        isSelected:
+                            _selectedLanguage == _LanguageOption.english,
+                        onTap: () => setState(
+                          () => _selectedLanguage = _LanguageOption.english,
+                        ),
+                        icon: Icons.language,
+                        disableAnimations: disableAnimations,
                       ),
-                    );
-                  }),
-                  const Spacer(),
-                  // Submit button
-                  FilledButton(
-                    onPressed: canSubmit ? _submit : null,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.onPrimary,
-                            ),
-                          )
-                        : const Text('Take me to my feed'),
+                      const SizedBox(height: 12),
+                      _LanguageCard(
+                        option: _LanguageOption.bengali,
+                        isSelected:
+                            _selectedLanguage == _LanguageOption.bengali,
+                        onTap: () => setState(
+                          () => _selectedLanguage = _LanguageOption.bengali,
+                        ),
+                        icon: Icons.translate,
+                        disableAnimations: disableAnimations,
+                      ),
+                      const SizedBox(height: 12),
+                      _LanguageCard(
+                        option: _LanguageOption.both,
+                        isSelected: _selectedLanguage == _LanguageOption.both,
+                        onTap: () => setState(
+                          () => _selectedLanguage = _LanguageOption.both,
+                        ),
+                        icon: Icons.public,
+                        disableAnimations: disableAnimations,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 48),
+
+                  const SizedBox(height: 32),
+
+                  // Submit button
+                  Semantics(
+                    button: true,
+                    label: 'Complete onboarding',
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: AppShapes.sm,
+                          disabledBackgroundColor: AppColors.surfaceVariant,
+                          disabledForegroundColor: AppColors.onSurfaceVariant
+                              .withValues(alpha: 0.5),
+                        ),
+                        onPressed: canSubmit ? _submit : null,
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.surface,
+                                ),
+                              )
+                            : Text(
+                                'Take me to my feed',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: canSubmit
+                                      ? AppColors.surface
+                                      : AppColors.onSurfaceVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildProgressIndicator({
-    required int currentStep,
-    required int totalSteps,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(totalSteps, (index) {
-        final isFilled = index < currentStep;
-        return Container(
-          width: 8,
-          height: 8,
-          margin: EdgeInsets.only(left: index == 0 ? 0 : 6),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled ? AppColors.primary : Colors.transparent,
-            border: Border.all(
-              color: isFilled ? AppColors.primary : AppColors.outline,
-              width: 1.5,
-            ),
-          ),
-        );
-      }),
     );
   }
 }
@@ -205,94 +301,96 @@ class _LanguageCard extends StatelessWidget {
   final _LanguageOption option;
   final bool isSelected;
   final VoidCallback onTap;
+  final IconData icon;
+  final bool disableAnimations;
 
   const _LanguageCard({
     required this.option,
     required this.isSelected,
     required this.onTap,
+    required this.icon,
+    required this.disableAnimations,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Check for reduced motion
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: reduceMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 150),
-        curve: Curves.easeInOut,
-        height: 56,
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryContainer : AppColors.surface,
-          borderRadius: AppShapes.radiusMd,
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-            width: isSelected ? 2 : 1,
+    // Bengali label explicitly strips fontFamily so it resolves to system (Noto Serif Bengali)
+    final textStyle = theme.textTheme.labelLarge?.copyWith(
+      color: isSelected ? AppColors.onSurface : AppColors.onSurfaceVariant,
+    );
+
+    final labelStyle = option == _LanguageOption.bengali
+        ? textStyle?.copyWith(
+            fontFamily: 'system',
+          ) // We strip the Playfair or DM Sans family to let system handle Bangla
+        : textStyle;
+
+    return Semantics(
+      button: true,
+      label: 'Select ${option.label}',
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: disableAnimations
+              ? Duration.zero
+              : const Duration(milliseconds: 150),
+          curve: Curves.easeInOut,
+          height: 56,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryContainer : AppColors.surface,
+            borderRadius: AppShapes.radiusMd, // 12dp corner
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+              width: isSelected ? 2 : 1,
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Radio indicator
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.outline,
-                    width: 2,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                // Radio indicator
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? AppColors.primary : AppColors.outline,
+                      width: 2,
+                    ),
                   ),
-                ),
-                child: isSelected
-                    ? Center(
-                        child: Container(
-                          width: 10,
-                          height: 10,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primary,
+                  child: isSelected
+                      ? Center(
+                          child: Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.primary,
+                            ),
                           ),
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              // Language icon
-              Icon(
-                option == _LanguageOption.english
-                    ? Icons.language
-                    : option == _LanguageOption.bengali
-                    ? Icons.translate
-                    : Icons.public,
-                size: 20,
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.onSurfaceVariant,
-              ),
-              const SizedBox(width: 12),
-              // Language label
-              // Note: Bengali text should NOT have fontFamily set (uses system font)
-              Text(
-                option.label,
-                style: option == _LanguageOption.bengali
-                    ? theme.textTheme.labelLarge?.copyWith(
-                        color: isSelected
-                            ? AppColors.onSurface
-                            : AppColors.onSurfaceVariant,
-                      )
-                    : theme.textTheme.labelLarge?.copyWith(
-                        color: isSelected
-                            ? AppColors.onSurface
-                            : AppColors.onSurfaceVariant,
-                      ),
-              ),
-            ],
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+
+                // Language icon
+                Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+
+                // Language label
+                Text(option.label, style: labelStyle),
+              ],
+            ),
           ),
         ),
       ),

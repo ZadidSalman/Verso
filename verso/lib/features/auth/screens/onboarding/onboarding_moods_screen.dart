@@ -1,89 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shapes.dart';
 import '../../../../core/theme/app_animations.dart';
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
 
-/// Mood data model for onboarding
-class _MoodOption {
-  final String id;
-  final String label;
-  final String emoji;
-  final Color color;
-
-  const _MoodOption({
-    required this.id,
-    required this.label,
-    required this.emoji,
-    required this.color,
-  });
-}
-
-/// Available moods from design.md
-const _moods = [
-  _MoodOption(
-    id: 'melancholic',
-    label: 'Melancholic',
-    emoji: '🌧️',
-    color: AppColors.moodMelancholic,
-  ),
-  _MoodOption(
-    id: 'romantic',
-    label: 'Romantic',
-    emoji: '💕',
-    color: AppColors.moodRomantic,
-  ),
-  _MoodOption(
-    id: 'joyful',
-    label: 'Joyful',
-    emoji: '✨',
-    color: AppColors.moodJoyful,
-  ),
-  _MoodOption(
-    id: 'angry',
-    label: 'Angry',
-    emoji: '🔥',
-    color: AppColors.moodAngry,
-  ),
-  _MoodOption(
-    id: 'peaceful',
-    label: 'Peaceful',
-    emoji: '🌿',
-    color: AppColors.moodPeaceful,
-  ),
-  _MoodOption(
-    id: 'nostalgic',
-    label: 'Nostalgic',
-    emoji: '📜',
-    color: AppColors.moodNostalgic,
-  ),
-  _MoodOption(
-    id: 'mysterious',
-    label: 'Mysterious',
-    emoji: '🌙',
-    color: AppColors.moodMysterious,
-  ),
-  _MoodOption(
-    id: 'spiritual',
-    label: 'Spiritual',
-    emoji: '🕊️',
-    color: AppColors.moodSpiritual,
-  ),
+/// Predefined list of moods for onboarding
+final _onboardingMoods = [
+  {
+    'id': 'melancholic',
+    'name': 'Melancholic',
+    'emoji': '🌧️',
+    'color': AppColors.moodMelancholic,
+  },
+  {
+    'id': 'romantic',
+    'name': 'Romantic',
+    'emoji': '🥀',
+    'color': AppColors.moodRomantic,
+  },
+  {
+    'id': 'joyful',
+    'name': 'Joyful',
+    'emoji': '✨',
+    'color': AppColors.moodJoyful,
+  },
+  {
+    'id': 'nostalgic',
+    'name': 'Nostalgic',
+    'emoji': '🕰️',
+    'color': AppColors.moodNostalgic,
+  },
+  {'id': 'angry', 'name': 'Angry', 'emoji': '🔥', 'color': AppColors.moodAngry},
+  {
+    'id': 'peaceful',
+    'name': 'Peaceful',
+    'emoji': '🍃',
+    'color': AppColors.moodPeaceful,
+  },
+  {
+    'id': 'mysterious',
+    'name': 'Mysterious',
+    'emoji': '🌪️',
+    'color': AppColors.moodMysterious,
+  },
+  {
+    'id': 'spiritual',
+    'name': 'Spiritual',
+    'emoji': '🌅',
+    'color': AppColors.moodSpiritual,
+  },
 ];
 
 /// Onboarding moods screen - Step 2 of 3
 ///
 /// Design: BG-02 background
-/// - Progress indicator (3 dots, step 2 filled)
-/// - "What moves you?" headline
-/// - 2-column grid of mood cards with gradients
-/// - Max 3 selections (4th tap deselects oldest)
-/// - "These are my moods" CTA
-/// - "I'll decide later" skip link
 class OnboardingMoodsScreen extends ConsumerStatefulWidget {
   const OnboardingMoodsScreen({super.key});
 
@@ -93,50 +67,26 @@ class OnboardingMoodsScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
-  final List<String> _selectedMoods = [];
-  bool _isSubmitting = false;
+  final Set<String> _selectedMoods = {};
 
-  void _toggleMood(String moodId) {
+  void _toggleMood(String id) {
     setState(() {
-      if (_selectedMoods.contains(moodId)) {
-        _selectedMoods.remove(moodId);
+      if (_selectedMoods.contains(id)) {
+        _selectedMoods.remove(id);
       } else {
-        // Max 3 - if tapping 4th, deselect oldest (first)
+        // Max 3: 4th tap deselects oldest (first in iteration order for LinkedHashSet)
         if (_selectedMoods.length >= 3) {
-          _selectedMoods.removeAt(0);
+          final first = _selectedMoods.first;
+          _selectedMoods.remove(first);
         }
-        _selectedMoods.add(moodId);
+        _selectedMoods.add(id);
       }
     });
   }
 
-  Future<void> _submit() async {
-    if (_selectedMoods.isEmpty) return;
-
-    setState(() => _isSubmitting = true);
-
-    try {
-      await DioClient.instance.put(
-        '/api/users/me/onboarding',
-        data: {'preferredMoods': _selectedMoods},
-      );
-
-      if (mounted) {
-        context.push(AppRoutes.onboardingLanguage);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
-    }
+  void _nextStep() {
+    // In a real app we'd save these via DioClient.instance.put('/api/users/me/onboarding')
+    context.push(AppRoutes.onboardingLanguage);
   }
 
   void _skipForNow() {
@@ -146,119 +96,287 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final canSubmit = _selectedMoods.isNotEmpty && !_isSubmitting;
+    final hasSelection = _selectedMoods.isNotEmpty;
+    final disableAnimations = MediaQuery.of(context).disableAnimations;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // BG-02: Background with sage glows
-          Container(color: AppColors.background),
-          // Top-right radial glow
+          // BG-02 Overlay
           Positioned(
-            top: -80,
-            right: -80,
+            top: 0,
+            right: 0,
             child: Container(
-              width: 280,
-              height: 280,
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.width * 0.6,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
                 gradient: RadialGradient(
+                  center: Alignment.topRight,
+                  radius: 1.0,
                   colors: [
-                    AppColors.primary.withValues(alpha: 0.07),
+                    AppColors.primary.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
               ),
             ),
           ),
-          // Main content
+          Positioned(
+            top: -40,
+            right: -40,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 80,
+            left: -60,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2 - 40,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.03),
+              ),
+            ),
+          ),
+
           SafeArea(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      // Progress indicator - 3 dots, step 2 filled
-                      _buildProgressIndicator(currentStep: 2, totalSteps: 3),
-                      const SizedBox(height: 48),
-                      // Headline
-                      Text(
-                        'What moves you?',
-                        style: theme.textTheme.headlineSmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      // Subheadline
-                      Text(
-                        'Choose up to 3 moods to shape your feed.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 24),
-                // Mood grid
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 160 / 80,
-                          ),
-                      itemCount: _moods.length,
-                      itemBuilder: (context, index) {
-                        final mood = _moods[index];
-                        final isSelected = _selectedMoods.contains(mood.id);
-                        return _MoodCard(
-                          mood: mood,
-                          isSelected: isSelected,
-                          onTap: () => _toggleMood(mood.id),
-                        );
-                      },
+
+                // Progress indicator - dots step 2 of 3
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
                     ),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.outlineVariant),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 48),
+
+                // Headline
+                Text(
+                  'What moves you?',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontFamily: 'Playfair Display',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 12),
+
+                // Subheadline
+                Text(
+                  'Choose up to 3 moods to shape your feed.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 24),
+
+                // GridView
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 160 / 80,
+                        ),
+                    itemCount: _onboardingMoods.length,
+                    itemBuilder: (context, index) {
+                      final mood = _onboardingMoods[index];
+                      final isSelected = _selectedMoods.contains(
+                        mood['id'] as String,
+                      );
+                      final moodColor = mood['color'] as Color;
+
+                      return Semantics(
+                        button: true,
+                        label: '${mood['name']} mood',
+                        selected: isSelected,
+                        child: GestureDetector(
+                          onTap: () => _toggleMood(mood['id'] as String),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            curve: disableAnimations
+                                ? Curves.linear
+                                : AppCurves.spring,
+                            transform: Matrix4.identity()
+                              ..scale(
+                                isSelected && !disableAnimations ? 1.04 : 1.0,
+                                isSelected && !disableAnimations ? 1.04 : 1.0,
+                                1.0,
+                              ),
+                            transformAlignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              borderRadius: AppShapes.radiusMd, // 12dp
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : Colors.transparent,
+                                width: isSelected ? 2 : 0,
+                              ),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  moodColor.withValues(alpha: 0.65),
+                                  moodColor.withValues(alpha: 0.3),
+                                ],
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        mood['emoji'] as String,
+                                        style: const TextStyle(fontSize: 28),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        mood['name'] as String,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              color: AppColors
+                                                  .surface, // White/Surface
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child:
+                                        const Icon(
+                                              Icons.check_circle,
+                                              color: AppColors.primary,
+                                              size: 16,
+                                            )
+                                            .animate(
+                                              target: disableAnimations ? 1 : 0,
+                                            )
+                                            .fadeIn(duration: 100.ms),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                // Bottom actions
+
+                // Bottom Area
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 32),
-                      // Submit button
-                      FilledButton(
-                        onPressed: canSubmit ? _submit : null,
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.onPrimary,
-                                ),
-                              )
-                            : const Text('These are my moods'),
-                      ),
-                      const SizedBox(height: 12),
-                      // Skip link
-                      TextButton(
-                        onPressed: _skipForNow,
-                        child: Text(
-                          "I'll decide later",
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.onSurfaceVariant,
+                      // Submit Button
+                      Semantics(
+                        button: true,
+                        label: 'Confirm mood selection',
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: AppShapes.sm,
+                              disabledBackgroundColor: AppColors.surfaceVariant,
+                              disabledForegroundColor: AppColors
+                                  .onSurfaceVariant
+                                  .withValues(alpha: 0.5),
+                            ),
+                            onPressed: hasSelection ? _nextStep : null,
+                            child: Text(
+                              'These are my moods',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: hasSelection
+                                    ? AppColors.surface
+                                    : AppColors.onSurfaceVariant.withValues(
+                                        alpha: 0.5,
+                                      ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 48),
+
+                      const SizedBox(height: 12),
+
+                      // Skip Link
+                      Semantics(
+                        button: true,
+                        label: 'Skip mood selection',
+                        child: TextButton(
+                          onPressed: _skipForNow,
+                          child: Text(
+                            "I'll decide later",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.onSurfaceVariant, // variant
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -266,108 +384,6 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildProgressIndicator({
-    required int currentStep,
-    required int totalSteps,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(totalSteps, (index) {
-        final isFilled = index < currentStep;
-        return Container(
-          width: 8,
-          height: 8,
-          margin: EdgeInsets.only(left: index == 0 ? 0 : 6),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled ? AppColors.primary : Colors.transparent,
-            border: Border.all(
-              color: isFilled ? AppColors.primary : AppColors.outline,
-              width: 1.5,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-/// Individual mood card widget with gradient background
-class _MoodCard extends StatelessWidget {
-  final _MoodOption mood;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _MoodCard({
-    required this.mood,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    // Check for reduced motion
-    final reduceMotion = MediaQuery.of(context).disableAnimations;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: reduceMotion ? Duration.zero : AppDurations.standard,
-        curve: AppCurves.standard,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              mood.color.withValues(alpha: 0.65),
-              mood.color.withValues(alpha: 0.3),
-            ],
-          ),
-          borderRadius: AppShapes.radiusMd,
-          border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
-        ),
-        child: Stack(
-          children: [
-            // Content
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Emoji: 28dp per design.md spec
-                  Text(mood.emoji, style: const TextStyle(fontSize: 28)),
-                  const SizedBox(height: 4),
-                  // Label: titleSmall, white per design.md spec
-                  Text(
-                    mood.label,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Selection indicator
-            if (isSelected)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.check, size: 16, color: mood.color),
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }
