@@ -1,0 +1,97 @@
+name: verso
+description: "Verso — A literary sanctuary for poets and readers"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0-308.0.dev
+
+# ═══════════════════════════════════════════════════════════════════
+# Verso — Dependencies (2026 stable versions)
+# Flutter SDK: 3.32.x+ stable channel
+#
+# VERSION RULES:
+#   PINNED  = exact version required — breaking changes or BoM coupling
+#   LATEST  = always install latest stable — no strict version coupling
+#
+# ⚠️  CRITICAL COMPATIBILITY PAIRS — never upgrade independently:
+#   firebase_core ^4.3.0  ←→  firebase_messaging ^15.0.0   (FlutterFire BoM)
+#   socket_io_client ^3.1.4  ←→  backend socket.io@^4      (protocol v4)
+# ═══════════════════════════════════════════════════════════════════
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Routing (LATEST)
+  go_router:
+
+  # State management — Riverpod 3.x (PINNED)
+  # ⚠️ 3.x removes StateNotifierProvider, StateNotifier, ChangeNotifierProvider
+  # ✓ Use @riverpod annotations with Notifier / AsyncNotifier only
+  flutter_riverpod: ^3.0.0
+  riverpod_annotation: ^3.0.0
+
+  # HTTP (PINNED)
+  dio: ^5.9.0
+
+  # Token storage (LATEST)
+  flutter_secure_storage:
+
+  # Local cache (LATEST)
+  hive_ce:
+  hive_ce_flutter:
+
+  # Fonts (LATEST)
+  google_fonts:
+
+  # Images (LATEST)
+  cached_network_image:
+  blurhash_dart:
+
+  # Video & Audio (LATEST)
+  video_player:
+  just_audio:
+
+  # Real-time — PINNED + protocol lock
+  # ⚠️ socket_io_client uses Socket.IO protocol v4
+  # ⚠️ Backend MUST use socket.io@^4 — v5+ breaks connection silently
+  socket_io_client: ^3.0.0
+  pusher_channels_flutter:
+
+  # Push notifications — Firebase BoM (PINNED PAIR)
+  # ⚠️ firebase_core + firebase_messaging are BoM-paired
+  # ⚠️ Always check: pub.dev/packages/firebase_messaging → FlutterFire matrix
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
+  flutter_local_notifications:
+
+  # Media picker (LATEST)
+  image_picker:
+  file_picker:
+
+  # Animations (LATEST)
+  flutter_animate:
+
+  # Monitoring (LATEST)
+  sentry_flutter:
+  posthog_flutter:
+
+  # Network (LATEST)
+  connectivity_plus:
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  riverpod_generator: ^3.0.0
+  build_runner:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets will be added as needed
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/

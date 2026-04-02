@@ -1,0 +1,45 @@
+name: Build Android Release (AAB)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter (stable)
+        uses: subosito/flutter-action@v3
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        working-directory: verso
+        run: flutter pub get
+
+      - name: Run codegen
+        working-directory: verso
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build release AAB
+        working-directory: verso
+        run: |
+          flutter build appbundle --release \
+            --dart-define=API_URL=${{ secrets.API_URL }} \
+            --dart-define=PUSHER_KEY=${{ secrets.PUSHER_KEY }} \
+            --dart-define=PUSHER_CLUSTER=ap2 \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=POSTHOG_KEY=${{ secrets.POSTHOG_KEY }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab-${{ github.sha }}
+          path: verso/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
