@@ -9,8 +9,8 @@ const brevoClient = new BrevoClient({
 });
 
 const sender = {
-  email: 'hello@verso.app',
-  name: 'Verso',
+  email: process.env.BREVO_SENDER_EMAIL || 'zadidsalman@gmail.com',
+  name: process.env.BREVO_SENDER_NAME || 'Verso',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
