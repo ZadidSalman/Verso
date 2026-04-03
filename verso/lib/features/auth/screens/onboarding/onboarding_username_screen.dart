@@ -8,6 +8,7 @@ import '../../../../core/theme/app_shapes.dart';
 import '../../../../core/theme/app_animations.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
+import '../../models/auth_user.dart';
 import '../../providers/auth_provider.dart';
 
 /// Onboarding username screen - Step 1 of 3
@@ -112,13 +113,14 @@ class _OnboardingUsernameScreenState
         if (authState is AuthAuthenticated) {
           final userData = response.data['user'];
           if (userData != null) {
-            final updatedUser = authState.user.copyWith(
-              username: userData['username'] as String?,
+            // Parse full user object to sync all fields from backend
+            final updatedUser = AuthUser.fromJson(
+              userData as Map<String, dynamic>,
             );
             ref.read(authProvider.notifier).updateUser(updatedUser);
           }
         }
-        context.push(AppRoutes.onboardingMoods);
+        context.go(AppRoutes.onboardingMoods);
       }
     } catch (e) {
       if (mounted) {
@@ -136,7 +138,7 @@ class _OnboardingUsernameScreenState
   }
 
   void _skipForNow() {
-    context.push(AppRoutes.onboardingMoods);
+    context.go(AppRoutes.onboardingMoods);
   }
 
   Widget _buildAvailabilityIcon() {

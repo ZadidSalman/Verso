@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_shapes.dart';
 import '../../../../core/theme/app_animations.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/router/app_router.dart';
 
 /// Predefined list of moods for onboarding
@@ -84,13 +85,25 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
     });
   }
 
-  void _nextStep() {
-    // In a real app we'd save these via DioClient.instance.put('/api/users/me/onboarding')
-    context.push(AppRoutes.onboardingLanguage);
+  Future<void> _nextStep() async {
+    // Save selected moods to backend
+    if (_selectedMoods.isNotEmpty) {
+      try {
+        await DioClient.instance.put(
+          '/api/users/me/onboarding',
+          data: {'preferredMoods': _selectedMoods.toList()},
+        );
+      } catch (_) {
+        // Continue even if save fails - user can update later
+      }
+    }
+    if (mounted) {
+      context.go(AppRoutes.onboardingLanguage);
+    }
   }
 
   void _skipForNow() {
-    context.push(AppRoutes.onboardingLanguage);
+    context.go(AppRoutes.onboardingLanguage);
   }
 
   @override

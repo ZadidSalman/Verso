@@ -167,7 +167,12 @@ export async function checkUsername(req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    // Exclude current user from check (so their own username shows as available)
+    const query: Record<string, unknown> = { username: username.toLowerCase() };
+    if (req.user?._id) {
+      query._id = { $ne: req.user._id };
+    }
+    const existingUser = await User.findOne(query);
     res.json({ available: !existingUser });
   } catch (error) {
     console.error('Check username error:', error);

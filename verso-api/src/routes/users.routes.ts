@@ -15,8 +15,8 @@ const router = Router();
 // Public routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Check username availability
-router.get('/check-username', checkUsername);
+// Check username availability (optionally authenticated to exclude current user)
+router.get('/check-username', requireAuth, checkUsername);
 
 // Current user profile
 router.get('/me', requireAuth, getProfile);
