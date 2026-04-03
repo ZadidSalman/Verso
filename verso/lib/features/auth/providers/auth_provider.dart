@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/auth_user.dart';
 import '../repositories/auth_repository.dart';
@@ -54,19 +55,27 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> checkAuthStatus() async {
     state = const AuthLoading();
 
-    final isLoggedIn = await _repository.isLoggedIn();
-    if (isLoggedIn) {
-      // Try to fetch user profile
-      try {
-        final user = await _repository.getMe();
-        state = AuthAuthenticated(user);
-        return;
-      } catch (_) {
-        // Token expired or invalid - clear and go to unauthenticated
-        await _repository.logout();
+    try {
+      final isLoggedIn = await _repository.isLoggedIn();
+      if (isLoggedIn) {
+        // Try to fetch user profile
+        try {
+          final user = await _repository.getMe();
+          state = AuthAuthenticated(user);
+          return;
+        } catch (_) {
+          // Token expired or invalid - clear and go to unauthenticated
+          await _repository.logout();
+        }
       }
+      state = const AuthUnauthenticated();
+    } catch (e) {
+      // Any error during auth check → go to unauthenticated
+      if (kDebugMode) {
+        debugPrint('Auth check failed: $e');
+      }
+      state = const AuthUnauthenticated();
     }
-    state = const AuthUnauthenticated();
   }
 
   /// Register a new user

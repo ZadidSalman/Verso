@@ -6,6 +6,7 @@ import '../../core/theme/app_animations.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
 // Auth screens
+import '../../features/auth/screens/splash_screen.dart';
 import '../../features/auth/screens/welcome_screen.dart';
 import '../../features/auth/screens/sign_up_screen.dart';
 import '../../features/auth/screens/sign_in_screen.dart';
@@ -18,6 +19,9 @@ import '../../features/feed/screens/feed_screen.dart';
 /// Route paths
 class AppRoutes {
   AppRoutes._();
+
+  // Splash
+  static const splash = '/';
 
   // Auth
   static const welcome = '/auth/welcome';
@@ -51,17 +55,23 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
-    initialLocation: AppRoutes.welcome,
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
 
     // Auth redirect logic
     redirect: (context, state) {
+      final isSplashRoute = state.matchedLocation == AppRoutes.splash;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isOnboardingRoute = state.matchedLocation.contains('/onboarding');
 
-      // If loading, don't redirect
-      if (authState is AuthLoading || authState is AuthInitial) {
+      // If on splash screen, let SplashScreen handle navigation
+      if (isSplashRoute) {
         return null;
+      }
+
+      // If loading or initial and NOT on splash, go to splash
+      if (authState is AuthLoading || authState is AuthInitial) {
+        return AppRoutes.splash;
       }
 
       // If authenticated
@@ -109,6 +119,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
 
     routes: [
+      // Splash screen (initial route)
+      GoRoute(
+        path: AppRoutes.splash,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const SplashScreen()),
+      ),
+
       // Auth routes
       GoRoute(
         path: AppRoutes.welcome,

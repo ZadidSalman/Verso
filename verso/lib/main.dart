@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,9 +12,23 @@ import 'features/auth/providers/auth_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase (required for FCM)
-  // ⚠️ Requires google-services.json in android/app/
-  await Firebase.initializeApp();
+  // Initialize Firebase with timeout (cold starts can be slow)
+  try {
+    await Firebase.initializeApp().timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        if (kDebugMode) {
+          debugPrint('Firebase init timed out - continuing without FCM');
+        }
+        throw TimeoutException('Firebase init timed out');
+      },
+    );
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Firebase init failed: $e');
+    }
+    // App will work, but FCM won't be available
+  }
 
   runApp(const ProviderScope(child: VersoApp()));
 }
