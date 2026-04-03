@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -22,6 +24,7 @@ class FCMHandler {
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _isInitialized = false;
+  StreamSubscription<String>? _tokenRefreshSubscription;
 
   /// Initialize FCM and register token with backend
   ///
@@ -50,22 +53,32 @@ class FCMHandler {
           await _sendTokenToBackend(token);
         }
 
+        // Cancel any existing subscription before creating new one
+        await _tokenRefreshSubscription?.cancel();
+
         // Listen for token refresh
-        _messaging.onTokenRefresh.listen(_sendTokenToBackend);
+        _tokenRefreshSubscription = _messaging.onTokenRefresh.listen(
+          _sendTokenToBackend,
+          onError: (error) {
+            if (kDebugMode) {
+              debugPrint('FCM: Token refresh stream error: $error');
+            }
+          },
+        );
 
         _isInitialized = true;
 
         if (kDebugMode) {
-          print('FCM: Token registered successfully');
+          debugPrint('FCM: Token registered successfully');
         }
       } else {
         if (kDebugMode) {
-          print('FCM: Permission denied by user');
+          debugPrint('FCM: Permission denied by user');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('FCM: Error registering token: $e');
+        debugPrint('FCM: Error registering token: $e');
       }
       // Don't throw - FCM failure shouldn't block app usage
     }
@@ -80,11 +93,11 @@ class FCMHandler {
       );
 
       if (kDebugMode) {
-        print('FCM: Token sent to backend');
+        debugPrint('FCM: Token sent to backend');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('FCM: Error sending token to backend: $e');
+        debugPrint('FCM: Error sending token to backend: $e');
       }
       // Don't throw - will retry on next app launch
     }
@@ -93,15 +106,19 @@ class FCMHandler {
   /// Clear FCM token on logout
   Future<void> clearToken() async {
     try {
+      // Cancel the token refresh subscription
+      await _tokenRefreshSubscription?.cancel();
+      _tokenRefreshSubscription = null;
+
       await _messaging.deleteToken();
       _isInitialized = false;
 
       if (kDebugMode) {
-        print('FCM: Token cleared');
+        debugPrint('FCM: Token cleared');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('FCM: Error clearing token: $e');
+        debugPrint('FCM: Error clearing token: $e');
       }
     }
   }

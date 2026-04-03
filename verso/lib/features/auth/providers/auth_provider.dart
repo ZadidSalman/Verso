@@ -188,11 +188,16 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   /// Resend OTP
-  Future<void> resendOtp(String email) async {
+  /// Returns true if successful, false otherwise
+  Future<bool> resendOtp(String email) async {
     try {
       await _repository.resendOtp(email);
-    } catch (_) {
-      // Silently fail - user can try again
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Failed to resend OTP: $e');
+      }
+      return false;
     }
   }
 

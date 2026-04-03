@@ -22,6 +22,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _validationError;
+
+  // Email validation regex
+  static final _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
 
   @override
   void dispose() {
@@ -30,7 +36,39 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
+  bool _validateInputs() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty) {
+      setState(() => _validationError = 'Please enter your email');
+      return false;
+    }
+
+    if (!_emailRegex.hasMatch(email)) {
+      setState(() => _validationError = 'Please enter a valid email address');
+      return false;
+    }
+
+    if (password.isEmpty) {
+      setState(() => _validationError = 'Please enter a password');
+      return false;
+    }
+
+    if (password.length < 8) {
+      setState(
+        () => _validationError = 'Password must be at least 8 characters',
+      );
+      return false;
+    }
+
+    setState(() => _validationError = null);
+    return true;
+  }
+
   void _onSubmit() {
+    if (!_validateInputs()) return;
+
     ref
         .read(authProvider.notifier)
         .register(
@@ -44,7 +82,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthLoading;
-    final String? errorText = authState is AuthError ? authState.message : null;
+    // Show validation error OR auth error
+    final String? errorText =
+        _validationError ?? (authState is AuthError ? authState.message : null);
 
     return Scaffold(
       backgroundColor: AppColors.background,

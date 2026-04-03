@@ -69,6 +69,7 @@ class OnboardingMoodsScreen extends ConsumerStatefulWidget {
 
 class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
   final Set<String> _selectedMoods = {};
+  bool _isSaving = false;
 
   void _toggleMood(String id) {
     setState(() {
@@ -86,6 +87,10 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
   }
 
   Future<void> _nextStep() async {
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
     // Save selected moods to backend
     if (_selectedMoods.isNotEmpty) {
       try {
@@ -97,7 +102,9 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
         // Continue even if save fails - user can update later
       }
     }
+
     if (mounted) {
+      setState(() => _isSaving = false);
       context.go(AppRoutes.onboardingLanguage);
     }
   }
@@ -317,14 +324,14 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
                                     right: 8,
                                     child:
                                         const Icon(
-                                              Icons.check_circle,
-                                              color: AppColors.primary,
-                                              size: 16,
-                                            )
-                                            .animate(
-                                              target: disableAnimations ? 1 : 0,
-                                            )
-                                            .fadeIn(duration: 100.ms),
+                                          Icons.check_circle,
+                                          color: AppColors.primary,
+                                          size: 16,
+                                        ).animate().fadeIn(
+                                          duration: disableAnimations
+                                              ? Duration.zero
+                                              : 100.ms,
+                                        ),
                                   ),
                               ],
                             ),
@@ -359,17 +366,27 @@ class _OnboardingMoodsScreenState extends ConsumerState<OnboardingMoodsScreen> {
                                   .onSurfaceVariant
                                   .withValues(alpha: 0.5),
                             ),
-                            onPressed: hasSelection ? _nextStep : null,
-                            child: Text(
-                              'These are my moods',
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: hasSelection
-                                    ? AppColors.surface
-                                    : AppColors.onSurfaceVariant.withValues(
-                                        alpha: 0.5,
-                                      ),
-                              ),
-                            ),
+                            onPressed: hasSelection && !_isSaving
+                                ? _nextStep
+                                : null,
+                            child: _isSaving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.surface,
+                                    ),
+                                  )
+                                : Text(
+                                    'These are my moods',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: hasSelection
+                                          ? AppColors.surface
+                                          : AppColors.onSurfaceVariant
+                                                .withValues(alpha: 0.5),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

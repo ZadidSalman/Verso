@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,6 +36,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void initState() {
     super.initState();
     _startMinimumTimer();
+    _startTimeoutTimer();
   }
 
   void _startMinimumTimer() {
@@ -43,17 +45,35 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         setState(() {
           _minTimeElapsed = true;
         });
+        // Check immediately after timer completes
         _checkAndNavigate();
       }
     });
   }
 
+  /// Safety timeout - if auth check takes too long, go to welcome
+  void _startTimeoutTimer() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && !_hasNavigated) {
+        if (kDebugMode) {
+          debugPrint('[Splash] Timeout reached, forcing navigation to welcome');
+        }
+        _hasNavigated = true;
+        context.go(AppRoutes.welcome);
+      }
+    });
+  }
+
   void _checkAndNavigate() {
-    if (_hasNavigated || !_minTimeElapsed) return;
+    if (_hasNavigated || !_minTimeElapsed || !mounted) return;
 
     final authState = ref.read(authProvider);
 
-    // Only navigate if auth state has resolved
+    if (kDebugMode) {
+      debugPrint('[Splash] Checking auth state: ${authState.runtimeType}');
+    }
+
+    // Only navigate if auth state has resolved (not loading/initial)
     if (authState is AuthAuthenticated) {
       _hasNavigated = true;
       final user = authState.user;
@@ -66,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       _hasNavigated = true;
       context.go(AppRoutes.welcome);
     }
-    // If still AuthLoading or AuthInitial, wait for state change
+    // If still AuthLoading or AuthInitial, ref.listen will call us again when state changes
   }
 
   @override
@@ -151,23 +171,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
                   // Quill icon
                   Semantics(
-                        label: 'Verso Logo',
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            size: 48,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      )
-                      .animate(target: disableAnimations ? 1 : 0)
-                      .fadeIn(
-                        duration: AppDurations.emphasized,
-                        curve: AppCurves.emphasized,
+                    label: 'Verso Logo',
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        size: 48,
+                        color: AppColors.primary,
                       ),
+                    ),
+                  ).animate().fadeIn(
+                    duration: disableAnimations
+                        ? Duration.zero
+                        : AppDurations.emphasized,
+                    curve: AppCurves.emphasized,
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -181,11 +201,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                       )
                       .animate(
-                        delay: disableAnimations ? 0.ms : 200.ms,
-                        target: disableAnimations ? 1 : 0,
+                        delay: disableAnimations ? Duration.zero : 200.ms,
                       )
                       .fadeIn(
-                        duration: AppDurations.emphasized,
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.emphasized,
                         curve: AppCurves.emphasized,
                       ),
 
@@ -203,10 +224,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                       )
                       .animate(
-                        delay: disableAnimations ? 0.ms : 400.ms,
-                        target: disableAnimations ? 1 : 0,
+                        delay: disableAnimations ? Duration.zero : 400.ms,
                       )
-                      .fadeIn(duration: AppDurations.standard),
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.standard,
+                      ),
 
                   const SizedBox(height: 16),
 
@@ -220,10 +244,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         ),
                       )
                       .animate(
-                        delay: disableAnimations ? 0.ms : 500.ms,
-                        target: disableAnimations ? 1 : 0,
+                        delay: disableAnimations ? Duration.zero : 500.ms,
                       )
-                      .fadeIn(duration: AppDurations.standard),
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.standard,
+                      ),
 
                   const SizedBox(height: 48),
                 ],

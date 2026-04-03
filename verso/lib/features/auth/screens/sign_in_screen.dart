@@ -22,6 +22,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _validationError;
+
+  // Email validation regex
+  static final _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
 
   @override
   void dispose() {
@@ -30,11 +36,38 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     super.dispose();
   }
 
+  bool _validateInputs() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty) {
+      setState(() => _validationError = 'Please enter your email');
+      return false;
+    }
+
+    if (!_emailRegex.hasMatch(email)) {
+      setState(() => _validationError = 'Please enter a valid email address');
+      return false;
+    }
+
+    if (password.isEmpty) {
+      setState(() => _validationError = 'Please enter your password');
+      return false;
+    }
+
+    setState(() => _validationError = null);
+    return true;
+  }
+
   void _onSubmit() {
-    ref.read(authProvider.notifier).login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    if (!_validateInputs()) return;
+
+    ref
+        .read(authProvider.notifier)
+        .login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
   }
 
   @override
@@ -42,11 +75,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
     final isLoading = authState is AuthLoading;
-    
+
     // Check if error is specifically about wrong password or email not verified
-    String? inlineError;
-    if (authState is AuthError) {
-      if (authState.message.toLowerCase().contains('password') || 
+    // Also show validation errors inline
+    String? inlineError = _validationError;
+    if (inlineError == null && authState is AuthError) {
+      if (authState.message.toLowerCase().contains('password') ||
           authState.message.toLowerCase().contains('credentials')) {
         inlineError = authState.message;
       }
@@ -57,16 +91,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       if (next is AuthError) {
         if (next.message.toLowerCase().contains('verify')) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: const Text('Please verify your email. A new code has been sent.')),
+            SnackBar(
+              content: const Text(
+                'Please verify your email. A new code has been sent.',
+              ),
+            ),
           );
           // Navigate to OTP screen
-          context.push(AppRoutes.verifyOtp, extra: {'email': _emailController.text.trim()});
-        } else if (!next.message.toLowerCase().contains('password') && 
-                   !next.message.toLowerCase().contains('credentials')) {
-          // Show snackbar for non-inline errors
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(next.message)),
+          context.push(
+            AppRoutes.verifyOtp,
+            extra: _emailController.text.trim(),
           );
+        } else if (!next.message.toLowerCase().contains('password') &&
+            !next.message.toLowerCase().contains('credentials')) {
+          // Show snackbar for non-inline errors
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(next.message)));
         }
       }
     });
@@ -130,7 +171,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
             ),
           ),
-          
+
           // Back Button
           SafeArea(
             child: Semantics(
@@ -185,7 +226,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Email field
                           Semantics(
                             label: 'Email address',
@@ -205,64 +246,77 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: AppShapes.radiusSm,
-                                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Password field
                           Semantics(
-                            label: 'Password',
-                            child: SizedBox(
-                              height: 56,
-                              child: TextField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) => _onSubmit(),
-                                decoration: InputDecoration(
-                                  hintText: 'Password',
-                                  filled: true,
-                                  fillColor: AppColors.surfaceVariant,
-                                  border: const OutlineInputBorder(
-                                    borderRadius: AppShapes.radiusSm,
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: const OutlineInputBorder(
-                                    borderRadius: AppShapes.radiusSm,
-                                    borderSide: BorderSide(color: AppColors.primary, width: 2),
-                                  ),
-                                  suffixIcon: AnimatedSwitcher(
-                                    duration: const Duration(milliseconds: 150),
-                                    child: IconButton(
-                                      key: ValueKey(_obscurePassword),
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                        size: 20,
+                                label: 'Password',
+                                child: SizedBox(
+                                  height: 56,
+                                  child: TextField(
+                                    controller: _passwordController,
+                                    obscureText: _obscurePassword,
+                                    textInputAction: TextInputAction.done,
+                                    onSubmitted: (_) => _onSubmit(),
+                                    decoration: InputDecoration(
+                                      hintText: 'Password',
+                                      filled: true,
+                                      fillColor: AppColors.surfaceVariant,
+                                      border: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide.none,
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _obscurePassword = !_obscurePassword;
-                                        });
-                                      },
+                                      focusedBorder: const OutlineInputBorder(
+                                        borderRadius: AppShapes.radiusSm,
+                                        borderSide: BorderSide(
+                                          color: AppColors.primary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      suffixIcon: AnimatedSwitcher(
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
+                                        child: IconButton(
+                                          key: ValueKey(_obscurePassword),
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_outlined
+                                                : Icons.visibility_off_outlined,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ).animate(target: inlineError != null ? 1 : 0).shakeX(amount: 4, duration: 400.ms),
-                          
+                              )
+                              .animate(target: inlineError != null ? 1 : 0)
+                              .shakeX(amount: 4, duration: 400.ms),
+
                           const SizedBox(height: 8),
-                          
+
                           if (inlineError != null)
                             Text(
                               inlineError,
-                              style: theme.textTheme.bodySmall?.copyWith(color: AppColors.error),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.error,
+                              ),
                             ).animate().fadeIn(duration: 200.ms),
 
                           // Forgot password link
@@ -279,12 +333,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                               },
                               child: Text(
                                 'Forgot password?',
-                                style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Submit button
                           Semantics(
                             button: true,
@@ -309,23 +365,29 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                       ).animate().fadeIn(duration: 200.ms)
                                     : Text(
                                         'Return to your page',
-                                        style: theme.textTheme.labelLarge?.copyWith(color: AppColors.surface),
+                                        style: theme.textTheme.labelLarge
+                                            ?.copyWith(
+                                              color: AppColors.surface,
+                                            ),
                                       ).animate().fadeIn(duration: 200.ms),
                               ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Sign up link
                           Semantics(
                             button: true,
                             label: 'Navigate to sign up',
                             child: Center(
                               child: TextButton(
-                                onPressed: () => context.pushReplacement(AppRoutes.signUp),
+                                onPressed: () =>
+                                    context.pushReplacement(AppRoutes.signUp),
                                 child: Text(
                                   'New to Verso? Begin your story',
-                                  style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ),

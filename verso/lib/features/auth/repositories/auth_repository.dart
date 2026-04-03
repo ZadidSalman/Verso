@@ -7,6 +7,18 @@ import '../models/auth_user.dart';
 class AuthRepository {
   final Dio _dio = DioClient.instance;
 
+  /// Safely extract a string message from response data
+  String _extractMessage(
+    dynamic data, {
+    String fallback = 'Operation successful',
+  }) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message'];
+      if (message is String) return message;
+    }
+    return fallback;
+  }
+
   /// Register a new user
   /// Returns a message (OTP sent confirmation)
   Future<String> register({
@@ -17,7 +29,7 @@ class AuthRepository {
       '/api/auth/register',
       data: {'email': email, 'password': password},
     );
-    return response.data['message'] as String;
+    return _extractMessage(response.data, fallback: 'Verification code sent');
   }
 
   /// Verify OTP and get tokens
@@ -30,9 +42,12 @@ class AuthRepository {
       data: {'email': email, 'otp': otp},
     );
 
-    final authResponse = AuthResponse.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw FormatException('Invalid response format');
+    }
+
+    final authResponse = AuthResponse.fromJson(data);
 
     // Save tokens
     await SecureStorage.saveTokens(
@@ -54,9 +69,12 @@ class AuthRepository {
       data: {'email': email, 'password': password},
     );
 
-    final authResponse = AuthResponse.fromJson(
-      response.data as Map<String, dynamic>,
-    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw FormatException('Invalid response format');
+    }
+
+    final authResponse = AuthResponse.fromJson(data);
 
     // Save tokens
     await SecureStorage.saveTokens(
@@ -93,7 +111,7 @@ class AuthRepository {
       '/api/auth/forgot-password',
       data: {'email': email},
     );
-    return response.data['message'] as String;
+    return _extractMessage(response.data, fallback: 'Reset code sent');
   }
 
   /// Reset password with OTP
@@ -106,7 +124,10 @@ class AuthRepository {
       '/api/auth/reset-password',
       data: {'email': email, 'otp': otp, 'newPassword': newPassword},
     );
-    return response.data['message'] as String;
+    return _extractMessage(
+      response.data,
+      fallback: 'Password reset successful',
+    );
   }
 
   /// Resend OTP
@@ -115,7 +136,7 @@ class AuthRepository {
       '/api/auth/resend-otp',
       data: {'email': email},
     );
-    return response.data['message'] as String;
+    return _extractMessage(response.data, fallback: 'Code resent');
   }
 
   /// Check if user is logged in (has valid tokens)
@@ -126,6 +147,14 @@ class AuthRepository {
   /// Get current user profile
   Future<AuthUser> getMe() async {
     final response = await _dio.get('/api/users/me');
-    return AuthUser.fromJson(response.data['user'] as Map<String, dynamic>);
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw FormatException('Invalid response format');
+    }
+    final user = data['user'];
+    if (user is! Map<String, dynamic>) {
+      throw FormatException('Invalid user data in response');
+    }
+    return AuthUser.fromJson(user);
   }
 }

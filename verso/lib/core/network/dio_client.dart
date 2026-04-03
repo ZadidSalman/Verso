@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../storage/secure_storage.dart';
 
 /// API environment configuration
@@ -8,13 +9,24 @@ class ApiConfig {
 
   static const _baseUrlFromEnv = String.fromEnvironment('API_URL');
 
+  /// Fallback URL for local development when API_URL is not set
+  /// Only available in debug mode - release builds must set API_URL
+  static const _devFallbackUrl =
+      'http://10.0.2.2:3000'; // Android emulator localhost
+
   static String get baseUrl {
-    if (_baseUrlFromEnv.isEmpty) {
-      throw StateError(
-        'API_URL is not set. Run with --dart-define=API_URL=https://your-api-url',
-      );
+    if (_baseUrlFromEnv.isNotEmpty) {
+      return _baseUrlFromEnv;
     }
-    return _baseUrlFromEnv;
+    // Only allow fallback in debug mode
+    if (kDebugMode) {
+      debugPrint(
+        '[DIO] WARNING: API_URL not set, using fallback: $_devFallbackUrl',
+      );
+      return _devFallbackUrl;
+    }
+    // In release mode, throw if API_URL is not set
+    throw StateError('API_URL must be set via --dart-define in release builds');
   }
 
   static const connectTimeout = Duration(seconds: 15);

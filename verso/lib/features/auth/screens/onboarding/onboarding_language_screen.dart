@@ -316,16 +316,25 @@ class _LanguageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Bengali label explicitly strips fontFamily so it resolves to system (Noto Serif Bengali)
+    // Bengali label - omit fontFamily entirely to let system resolve to Noto Serif Bengali
+    // Per AGENTS.md: "NEVER set fontFamily on Bengali text"
     final textStyle = theme.textTheme.labelLarge?.copyWith(
       color: isSelected ? AppColors.onSurface : AppColors.onSurfaceVariant,
     );
 
-    final labelStyle = option == _LanguageOption.bengali
-        ? textStyle?.copyWith(
-            fontFamily: 'system',
-          ) // We strip the Playfair or DM Sans family to let system handle Bangla
-        : textStyle;
+    // For Bengali, create a new TextStyle without fontFamily
+    final TextStyle? labelStyle;
+    if (option == _LanguageOption.bengali) {
+      labelStyle = TextStyle(
+        fontSize: textStyle?.fontSize,
+        fontWeight: textStyle?.fontWeight,
+        color: textStyle?.color,
+        letterSpacing: textStyle?.letterSpacing,
+        // fontFamily is intentionally omitted for Bengali
+      );
+    } else {
+      labelStyle = textStyle;
+    }
 
     return Semantics(
       button: true,
