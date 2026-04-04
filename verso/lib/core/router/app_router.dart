@@ -25,6 +25,8 @@ import '../../features/story/screens/story_part_screen.dart';
 import '../../features/poem/screens/collab_poem_screen.dart';
 import '../../features/duel/screens/duel_screen.dart';
 import '../../features/video/screens/video_feed_screen.dart';
+import '../../features/messages/screens/conversations_screen.dart';
+import '../../features/messages/screens/message_thread_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -269,6 +271,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.videoFeed,
         pageBuilder: (context, state) =>
             _buildPage(context, state, const VideoFeedScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.messages,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const ConversationsScreen()),
+      ),
+      GoRoute(
+        path: '${AppRoutes.messages}/:conversationId',
+        pageBuilder: (context, state) {
+          final conversationId = state.pathParameters['conversationId'] ?? '';
+          return _buildPage(
+            context,
+            state,
+            MessageThreadScreen(conversationId: conversationId),
+          );
+        },
       ),
     ],
 

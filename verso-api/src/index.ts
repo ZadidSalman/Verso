@@ -1,10 +1,12 @@
 import 'dotenv/config';
+import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import mongoose from 'mongoose';
+import { initSocket } from './socket';
 
 import authRoutes from './routes/auth.routes';
 import usersRoutes from './routes/users.routes';
@@ -16,6 +18,7 @@ import storyRoutes from './routes/story.routes';
 import notificationRoutes from './routes/notification.routes';
 import collabRoutes from './routes/collab.routes';
 import duelRoutes from './routes/duel.routes';
+import conversationRoutes from './routes/conversation.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -85,6 +88,7 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/collab', collabRoutes);
 app.use('/api/duels', duelRoutes);
+app.use('/api/conversations', conversationRoutes);
 
 // 404 handler
 app.use((_, res) => {
@@ -115,9 +119,11 @@ async function startServer() {
     console.log('Connected to MongoDB');
 
     // Start server
-    app.listen(PORT, () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    httpServer.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
