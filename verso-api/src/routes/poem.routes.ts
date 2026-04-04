@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   createPoem,
   getPoem,
@@ -7,10 +8,12 @@ import {
   publishPoem,
   getPoemsByUsername,
   trackRead,
+  uploadAudio,
 } from '../controllers/poem.controller';
 import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public routes
@@ -44,5 +47,8 @@ router.delete('/:id', requireAuth, deletePoem);
 
 // Publish a draft poem
 router.post('/:id/publish', requireAuth, publishPoem);
+
+// Upload audio recitation
+router.post('/:id/audio', requireAuth, upload.single('audio'), uploadAudio);
 
 export default router;

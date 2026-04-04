@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Poem, IPoem } from '../models/Poem.model';
 import { User } from '../models/User.model';
+import { uploadAudio } from '../services/cloudinary.service';
 import mongoose from 'mongoose';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -329,5 +330,45 @@ export async function trackRead(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('Failed to track read:', error);
     res.status(500).json({ message: 'Could not track read.' });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPLOAD audio recitation
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function uploadAudio(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: 'Invalid poem ID.' });
+      return;
+    }
+
+    const poem = await Poem.findById(id);
+    if (!poem) {
+      res.status(404).json({ message: 'This poem has been taken away.' });
+      return;
+    }
+
+    if (poem.authorId.toString() !== req.user!._id.toString()) {
+      res.status(403).json({ message: 'This is not your poem to record.' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: 'No audio file provided.' });
+      return;
+    }
+
+    const audioUrl = await uploadAudio(req.file);
+    poem.audioUrl = audioUrl;
+    await poem.save();
+
+    res.status(200).json({ audioUrl, message: 'Your voice has been captured.' });
+  } catch (error) {
+    console.error('Failed to upload audio:', error);
+    res.status(500).json({ message: 'Could not upload your recording. Please try again.' });
   }
 }

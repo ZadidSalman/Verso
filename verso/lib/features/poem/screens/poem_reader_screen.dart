@@ -11,6 +11,7 @@ import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../shared/models/poem_model.dart';
 import '../../../shared/widgets/comment_sheet.dart';
+import '../../../shared/widgets/audio_player_card.dart';
 import '../providers/poem_provider.dart';
 import '../providers/engagement_provider.dart';
 
@@ -340,6 +341,12 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
                     ? Duration.zero
                     : AppDurations.emphasized,
               ),
+
+          // Audio player (if available)
+          if (poem.audioUrl != null) ...[
+            const SizedBox(height: 24),
+            AudioPlayerCard(audioUrl: poem.audioUrl!),
+          ],
 
           const SizedBox(height: 120),
         ],
