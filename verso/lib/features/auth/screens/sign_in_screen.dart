@@ -201,10 +201,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   label: 'Sign in form',
                   child: Card(
                     margin: const EdgeInsets.symmetric(horizontal: 24),
-                    elevation: 3,
+                    elevation: 0,
                     shadowColor: Colors.transparent,
                     shape: AppShapes.lg,
-                    color: AppColors.surface,
+                    color: Colors.white,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(

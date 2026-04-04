@@ -175,11 +175,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   label: 'Sign up form',
                   child: Card(
                     margin: const EdgeInsets.symmetric(horizontal: 24),
-                    elevation: 3,
-                    shadowColor: Colors
-                        .transparent, // "Shadow: none — tonal elevation only"
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
                     shape: AppShapes.lg,
-                    color: AppColors.surface,
+                    color: Colors.white,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(

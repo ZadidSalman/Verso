@@ -148,7 +148,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.verifyOtp,
         pageBuilder: (context, state) {
-          final email = state.extra as String?;
+          final email = state.extra is String ? state.extra as String : null;
           return _buildPage(context, state, VerifyOtpScreen(email: email));
         },
       ),
