@@ -387,8 +387,6 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final theme = Theme.of(context);
-
     return Container(
       color: AppColors.background,
       child: TabBar(

@@ -9,7 +9,6 @@ import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/poem_card.dart';
 import '../../feed/providers/feed_provider.dart';
-import '../../../shared/models/poem_model.dart';
 
 /// Discover screen — explore trending poems, moods, writers
 class DiscoverScreen extends ConsumerStatefulWidget {
@@ -306,8 +305,6 @@ class _LanguageToggleDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    final theme = Theme.of(context);
-
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
