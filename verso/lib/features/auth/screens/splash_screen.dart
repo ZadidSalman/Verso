@@ -78,12 +78,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       _hasNavigated = true;
       final user = authState.user;
       if (!user.hasCompletedOnboarding) {
+        if (kDebugMode) {
+          debugPrint('[Splash] → onboarding/username');
+        }
         context.go(AppRoutes.onboardingUsername);
       } else {
+        if (kDebugMode) {
+          debugPrint('[Splash] → feed');
+        }
         context.go(AppRoutes.feed);
       }
-    } else if (authState is AuthUnauthenticated || authState is AuthError) {
+    } else if (authState is AuthUnauthenticated) {
       _hasNavigated = true;
+      if (kDebugMode) {
+        debugPrint('[Splash] → welcome');
+      }
+      context.go(AppRoutes.welcome);
+    } else if (authState is AuthError) {
+      _hasNavigated = true;
+      if (kDebugMode) {
+        debugPrint('[Splash] → welcome (error: ${authState.message})');
+      }
       context.go(AppRoutes.welcome);
     }
     // If still AuthLoading or AuthInitial, ref.listen will call us again when state changes

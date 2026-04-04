@@ -57,23 +57,35 @@ class AuthNotifier extends Notifier<AuthState> {
 
     try {
       final isLoggedIn = await _repository.isLoggedIn();
+      if (kDebugMode) {
+        debugPrint('[Auth] isLoggedIn=$isLoggedIn');
+      }
       if (isLoggedIn) {
         // Try to fetch user profile
         try {
           final user = await _repository.getMe();
+          if (kDebugMode) {
+            debugPrint('[Auth] Authenticated: ${user.username ?? user.email}');
+          }
           state = AuthAuthenticated(user);
           return;
-        } catch (_) {
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[Auth] Token invalid, clearing: $e');
+          }
           // Token expired or invalid - clear and go to unauthenticated
           await _repository.logout();
         }
       }
+      if (kDebugMode) {
+        debugPrint('[Auth] Unauthenticated');
+      }
       state = const AuthUnauthenticated();
     } catch (e) {
-      // Any error during auth check → go to unauthenticated
       if (kDebugMode) {
-        debugPrint('Auth check failed: $e');
+        debugPrint('[Auth] Auth check error: $e');
       }
+      // Any error during auth check → go to unauthenticated
       state = const AuthUnauthenticated();
     }
   }

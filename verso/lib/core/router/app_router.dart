@@ -64,7 +64,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isOnboardingRoute = state.matchedLocation.contains('/onboarding');
 
-      // If on splash screen, let SplashScreen handle navigation
+      // NEVER redirect away from splash — let SplashScreen handle navigation
+      // after its minimum display time and auth check complete.
       if (isSplashRoute) {
         return null;
       }
@@ -96,10 +97,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // If not authenticated and trying to access protected route
       if (authState is AuthUnauthenticated) {
-        if (!isAuthRoute) {
-          return AppRoutes.welcome;
+        // If already on an auth route, stay there
+        if (isAuthRoute) {
+          return null;
         }
-        return null;
+        // Protected route → redirect to welcome
+        return AppRoutes.welcome;
       }
 
       // If OTP sent, redirect to verify OTP
@@ -110,7 +113,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // If error state, don't redirect - let user stay on current screen
+      // If error state, don't redirect — let user stay on current screen
       if (authState is AuthError) {
         return null;
       }
