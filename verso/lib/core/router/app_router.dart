@@ -22,6 +22,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/story/screens/story_editor_screen.dart';
 import '../../features/story/screens/story_part_screen.dart';
+import '../../features/poem/screens/collab_poem_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -55,6 +56,7 @@ class AppRoutes {
   static const story = '/story/:id';
   static const user = '/user/:username';
   static const poemEditor = '/editor/poem';
+  static const collabPoem = '/collab/:id';
   static const storyEditor = '/write/story';
   static const storyPart = '/story/:storyId/part/:partId';
 }
@@ -243,6 +245,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             state,
             StoryPartScreen(storyId: storyId, partId: partId),
           );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.collabPoem,
+        pageBuilder: (context, state) {
+          final poemId = state.pathParameters['id'] ?? '';
+          return _buildPage(context, state, CollabPoemScreen(poemId: poemId));
         },
       ),
     ],
