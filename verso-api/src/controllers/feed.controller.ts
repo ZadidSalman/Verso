@@ -93,7 +93,7 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
     const poems = await Poem.find(query)
       .sort({ trendingScore: -1, publishedAt: -1 })
       .limit(limitNum + 1)
-      .select('-__v -content')
+      .select('-__v')
       .lean();
 
     const hasMore = poems.length > limitNum;
