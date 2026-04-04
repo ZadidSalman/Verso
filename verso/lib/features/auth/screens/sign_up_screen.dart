@@ -202,6 +202,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               child: TextField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                autofillHints: const [AutofillHints.email],
                                 decoration: InputDecoration(
                                   prefixIcon: const Icon(
                                     Icons.email_outlined,
@@ -237,6 +238,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
                                 onSubmitted: (_) => _onSubmit(),
+                                autofillHints: const [
+                                  AutofillHints.newPassword,
+                                ],
                                 decoration: InputDecoration(
                                   prefixIcon: const Icon(
                                     Icons.lock_outline,

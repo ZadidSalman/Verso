@@ -232,6 +232,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.email],
                                 decoration: const InputDecoration(
                                   hintText: 'poet@example.com',
                                   filled: true,
@@ -263,6 +264,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 obscureText: _obscurePassword,
                                 textInputAction: TextInputAction.done,
                                 onSubmitted: (_) => _onSubmit(),
+                                autofillHints: const [AutofillHints.password],
                                 decoration: InputDecoration(
                                   hintText: 'Password',
                                   filled: true,
