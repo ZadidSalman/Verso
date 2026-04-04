@@ -24,6 +24,7 @@ import '../../features/story/screens/story_editor_screen.dart';
 import '../../features/story/screens/story_part_screen.dart';
 import '../../features/poem/screens/collab_poem_screen.dart';
 import '../../features/duel/screens/duel_screen.dart';
+import '../../features/video/screens/video_feed_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -59,6 +60,7 @@ class AppRoutes {
   static const poemEditor = '/editor/poem';
   static const collabPoem = '/collab/:id';
   static const duel = '/duel/:id';
+  static const videoFeed = '/video-feed';
   static const storyEditor = '/write/story';
   static const storyPart = '/story/:storyId/part/:partId';
 }
@@ -262,6 +264,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final duelId = state.pathParameters['id'] ?? '';
           return _buildPage(context, state, DuelScreen(duelId: duelId));
         },
+      ),
+      GoRoute(
+        path: AppRoutes.videoFeed,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const VideoFeedScreen()),
       ),
     ],
 

@@ -9,11 +9,13 @@ import {
   getPoemsByUsername,
   trackRead,
   uploadAudio,
+  uploadVideo,
 } from '../controllers/poem.controller';
 import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
-const upload = multer({ dest: 'uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
+const audioUpload = multer({ dest: 'uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
+const videoUpload = multer({ dest: 'uploads/', limits: { fileSize: 200 * 1024 * 1024 } });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public routes
@@ -49,6 +51,9 @@ router.delete('/:id', requireAuth, deletePoem);
 router.post('/:id/publish', requireAuth, publishPoem);
 
 // Upload audio recitation
-router.post('/:id/audio', requireAuth, upload.single('audio'), uploadAudio);
+router.post('/:id/audio', requireAuth, audioUpload.single('audio'), uploadAudio);
+
+// Upload video recitation
+router.post('/:id/video', requireAuth, videoUpload.single('video'), uploadVideo);
 
 export default router;

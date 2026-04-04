@@ -372,3 +372,43 @@ export async function uploadAudio(req: Request, res: Response): Promise<void> {
     res.status(500).json({ message: 'Could not upload your recording. Please try again.' });
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPLOAD video recitation
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function uploadVideo(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: 'Invalid poem ID.' });
+      return;
+    }
+
+    const poem = await Poem.findById(id);
+    if (!poem) {
+      res.status(404).json({ message: 'This poem has been taken away.' });
+      return;
+    }
+
+    if (poem.authorId.toString() !== req.user!._id.toString()) {
+      res.status(403).json({ message: 'This is not your poem to record.' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: 'No video file provided.' });
+      return;
+    }
+
+    const videoUrl = await uploadAudio(req.file); // Reuse cloudinary service (same upload function)
+    poem.videoUrl = videoUrl;
+    await poem.save();
+
+    res.status(200).json({ videoUrl, message: 'Your performance has been captured.' });
+  } catch (error) {
+    console.error('Failed to upload video:', error);
+    res.status(500).json({ message: 'Could not upload your video. Please try again.' });
+  }
+}
