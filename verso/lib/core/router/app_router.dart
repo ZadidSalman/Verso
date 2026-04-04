@@ -65,13 +65,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboardingRoute = state.matchedLocation.contains('/onboarding');
 
       // NEVER redirect away from splash — let SplashScreen handle navigation
-      // after its minimum display time and auth check complete.
       if (isSplashRoute) {
         return null;
       }
 
-      // If loading or initial and NOT on splash, go to splash
-      if (authState is AuthLoading || authState is AuthInitial) {
+      // If initial state and NOT on splash, go to splash (app startup only)
+      if (authState is AuthInitial) {
+        return AppRoutes.splash;
+      }
+
+      // If loading, only redirect to splash during initial app startup.
+      // Don't redirect during login/signup/OTP operations — user should stay
+      // on their current screen while the async operation completes.
+      if (authState is AuthLoading) {
+        if (isAuthRoute || isOnboardingRoute) {
+          return null;
+        }
         return AppRoutes.splash;
       }
 
