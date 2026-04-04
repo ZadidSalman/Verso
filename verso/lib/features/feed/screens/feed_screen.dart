@@ -236,11 +236,44 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       // For now, pull-to-refresh is handled by the feed notifier's refresh().
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to poem editor
+          context.push(AppRoutes.poemEditor);
         },
         backgroundColor: AppColors.primary,
         shape: AppShapes.xl,
         child: const Icon(Icons.edit_outlined, color: AppColors.surface),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (index) {
+          // TODO: Implement navigation
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Feed',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.explore_outlined),
+            selectedIcon: Icon(Icons.explore),
+            label: 'Discover',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.add_circle_outline),
+            selectedIcon: Icon(Icons.add_circle),
+            label: 'Write',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.message_outlined),
+            selectedIcon: Icon(Icons.message),
+            label: 'Messages',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outlined),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
