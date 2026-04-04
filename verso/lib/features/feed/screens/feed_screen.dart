@@ -11,6 +11,8 @@ import '../providers/feed_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
 import '../../../shared/widgets/mood_filter_bar.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
+import '../../../shared/widgets/comment_sheet.dart';
+import '../../poem/providers/engagement_provider.dart';
 
 /// Feed screen — main screen after authentication
 ///
@@ -186,10 +188,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         onTap: () =>
                             context.push('${AppRoutes.poem}/${poem.id}'),
                         onLike: () {
-                          // TODO: Implement like
+                          toggleLike(ref, poem.id);
                         },
                         onComment: () {
-                          // TODO: Navigate to comments
+                          CommentSheet.show(
+                            context,
+                            poemId: poem.id,
+                            commentCount: poem.commentsCount,
+                          );
                         },
                         onShare: () {
                           // TODO: Implement share

@@ -10,7 +10,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../shared/models/poem_model.dart';
+import '../../../shared/widgets/comment_sheet.dart';
 import '../providers/poem_provider.dart';
+import '../providers/engagement_provider.dart';
 
 /// Poem reader screen — full view of a poem
 ///
@@ -37,6 +39,7 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
   bool _isSaved = false;
   int _likesCount = 0;
   int _savesCount = 0;
+  int _commentsCount = 0;
 
   late AnimationController _heartController;
   late AnimationController _saveController;
@@ -78,6 +81,15 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
     });
 
     _heartController.forward(from: 0);
+    toggleLike(ref, widget.poemId);
+  }
+
+  void _openComments() {
+    CommentSheet.show(
+      context,
+      poemId: widget.poemId,
+      commentCount: _commentsCount,
+    );
   }
 
   void _toggleSave() {
@@ -153,7 +165,7 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
         isLiked: _isLiked,
         isSaved: _isSaved,
         onLike: _toggleLike,
-        onComment: () {},
+        onComment: _openComments,
         onSave: _toggleSave,
         onShare: () {},
         heartController: _heartController,

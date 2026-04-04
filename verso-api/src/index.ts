@@ -13,6 +13,7 @@ import feedRoutes from './routes/feed.routes';
 import likeRoutes from './routes/like.routes';
 import commentRoutes from './routes/comment.routes';
 import storyRoutes from './routes/story.routes';
+import notificationRoutes from './routes/notification.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -79,6 +80,7 @@ app.use('/api/feed', feedRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((_, res) => {
