@@ -23,6 +23,7 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/story/screens/story_editor_screen.dart';
 import '../../features/story/screens/story_part_screen.dart';
 import '../../features/poem/screens/collab_poem_screen.dart';
+import '../../features/duel/screens/duel_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -57,6 +58,7 @@ class AppRoutes {
   static const user = '/user/:username';
   static const poemEditor = '/editor/poem';
   static const collabPoem = '/collab/:id';
+  static const duel = '/duel/:id';
   static const storyEditor = '/write/story';
   static const storyPart = '/story/:storyId/part/:partId';
 }
@@ -252,6 +254,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final poemId = state.pathParameters['id'] ?? '';
           return _buildPage(context, state, CollabPoemScreen(poemId: poemId));
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.duel,
+        pageBuilder: (context, state) {
+          final duelId = state.pathParameters['id'] ?? '';
+          return _buildPage(context, state, DuelScreen(duelId: duelId));
         },
       ),
     ],

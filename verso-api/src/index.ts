@@ -15,6 +15,7 @@ import commentRoutes from './routes/comment.routes';
 import storyRoutes from './routes/story.routes';
 import notificationRoutes from './routes/notification.routes';
 import collabRoutes from './routes/collab.routes';
+import duelRoutes from './routes/duel.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -83,6 +84,7 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/collab', collabRoutes);
+app.use('/api/duels', duelRoutes);
 
 // 404 handler
 app.use((_, res) => {
