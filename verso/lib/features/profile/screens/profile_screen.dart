@@ -9,6 +9,7 @@ import '../../../core/router/app_router.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../feed/providers/feed_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
+import '../../../shared/widgets/follow_button.dart';
 
 /// Profile screen — shows user info, stats, tabs
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isFollowing = false;
 
   @override
   void initState() {
@@ -178,24 +178,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         Row(
                           children: [
                             Expanded(
-                              child: FilledButton(
-                                onPressed: () {
-                                  setState(() => _isFollowing = !_isFollowing);
-                                },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: _isFollowing
-                                      ? AppColors.surfaceVariant
-                                      : AppColors.primary,
-                                  shape: AppShapes.sm,
-                                ),
-                                child: Text(
-                                  _isFollowing ? 'Following' : 'Follow',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: _isFollowing
-                                        ? AppColors.onSurface
-                                        : AppColors.surface,
-                                  ),
-                                ),
+                              child: FollowButton(
+                                userId: 'placeholder-user-id',
                               ),
                             ),
                             const SizedBox(width: 8),
