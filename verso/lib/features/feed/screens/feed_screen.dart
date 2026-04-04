@@ -245,7 +245,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
         onDestinationSelected: (index) {
-          // TODO: Implement navigation
+          switch (index) {
+            case 0:
+              context.go(AppRoutes.feed);
+              break;
+            case 1:
+              context.go(AppRoutes.discover);
+              break;
+            case 2:
+              context.push(AppRoutes.poemEditor);
+              break;
+            case 3:
+              // TODO: Messages - not implemented yet
+              break;
+            case 4:
+              context.go(AppRoutes.profile);
+              break;
+          }
         },
         destinations: const [
           NavigationDestination(

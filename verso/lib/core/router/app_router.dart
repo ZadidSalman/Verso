@@ -17,6 +17,8 @@ import '../../features/auth/screens/onboarding/onboarding_language_screen.dart';
 import '../../features/feed/screens/feed_screen.dart';
 import '../../features/poem/screens/poem_editor_screen.dart';
 import '../../features/poem/screens/poem_reader_screen.dart';
+import '../../features/discover/screens/discover_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -197,6 +199,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) {
           final poemId = state.pathParameters['id'] ?? '';
           return _buildPage(context, state, PoemReaderScreen(poemId: poemId));
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.discover,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const DiscoverScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const ProfileScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.user,
+        pageBuilder: (context, state) {
+          final username = state.pathParameters['username'] ?? '';
+          return _buildPage(context, state, ProfileScreen(username: username));
         },
       ),
     ],
