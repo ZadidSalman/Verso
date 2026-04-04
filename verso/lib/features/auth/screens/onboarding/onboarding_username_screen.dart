@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,9 +37,6 @@ class _OnboardingUsernameScreenState
   @override
   void initState() {
     super.initState();
-    _usernameFocusNode.addListener(() {
-      setState(() {}); // trigger rebuild for focus border
-    });
   }
 
   @override
@@ -86,8 +84,10 @@ class _OnboardingUsernameScreenState
           });
         }
       } catch (_) {
+        // If backend is unreachable, allow the user to proceed anyway.
+        // The backend will validate on submit and return an error if taken.
         if (mounted) {
-          setState(() => _availability = _UsernameAvailability.error);
+          setState(() => _availability = _UsernameAvailability.available);
         }
       }
     });
@@ -95,8 +95,7 @@ class _OnboardingUsernameScreenState
 
   Future<void> _submit() async {
     final username = _usernameController.text.toLowerCase().trim();
-    if (!_isValidFormat(username) ||
-        _availability != _UsernameAvailability.available) {
+    if (!_isValidFormat(username)) {
       return;
     }
 
@@ -113,7 +112,6 @@ class _OnboardingUsernameScreenState
         if (authState is AuthAuthenticated) {
           final userData = response.data['user'];
           if (userData != null) {
-            // Parse full user object to sync all fields from backend
             final updatedUser = AuthUser.fromJson(
               userData as Map<String, dynamic>,
             );
@@ -121,6 +119,16 @@ class _OnboardingUsernameScreenState
           }
         }
         context.go(AppRoutes.onboardingMoods);
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        final message = e.response?.data['message'] as String?;
+        if (message != null && message.toLowerCase().contains('taken')) {
+          setState(() => _availability = _UsernameAvailability.taken);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message ?? 'Something went wrong.')),
+        );
       }
     } catch (e) {
       if (mounted) {
