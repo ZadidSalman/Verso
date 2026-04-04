@@ -9,7 +9,6 @@
 
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
 
 import { User } from './models/User.model';
 import { Poem } from './models/Poem.model';
