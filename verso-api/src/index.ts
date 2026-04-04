@@ -19,6 +19,7 @@ import notificationRoutes from './routes/notification.routes';
 import collabRoutes from './routes/collab.routes';
 import duelRoutes from './routes/duel.routes';
 import conversationRoutes from './routes/conversation.routes';
+import thoughtRoutes from './routes/thought.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -89,6 +90,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/collab', collabRoutes);
 app.use('/api/duels', duelRoutes);
 app.use('/api/conversations', conversationRoutes);
+app.use('/api/thoughts', thoughtRoutes);
 
 // 404 handler
 app.use((_, res) => {

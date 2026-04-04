@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
+import '../data/thought_repository.dart';
 
 /// Visibility option for thoughts
 enum VisibilityOption {
@@ -38,6 +39,7 @@ class ThoughtComposerSheet extends StatefulWidget {
 
 class _ThoughtComposerSheetState extends State<ThoughtComposerSheet> {
   final _controller = TextEditingController();
+  final _repository = ThoughtRepository();
   VisibilityOption _visibility = VisibilityOption.public;
   bool _isPosting = false;
 
@@ -47,14 +49,23 @@ class _ThoughtComposerSheetState extends State<ThoughtComposerSheet> {
     super.dispose();
   }
 
-  void _post() {
+  Future<void> _post() async {
     if (_controller.text.trim().isEmpty || _isPosting) return;
 
     setState(() => _isPosting = true);
 
-    // TODO: Call API to post thought
-    // For now, just close the sheet
-    Future.delayed(const Duration(milliseconds: 500), () {
+    try {
+      final visibilityStr = switch (_visibility) {
+        VisibilityOption.public => 'public',
+        VisibilityOption.mutual => 'mutual',
+        VisibilityOption.private => 'private',
+      };
+
+      await _repository.createThought(
+        content: _controller.text.trim(),
+        visibility: visibilityStr,
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -64,7 +75,20 @@ class _ThoughtComposerSheetState extends State<ThoughtComposerSheet> {
         );
         context.pop();
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not post thought. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPosting = false);
+      }
+    }
   }
 
   String _visibilityMessage(VisibilityOption v) {

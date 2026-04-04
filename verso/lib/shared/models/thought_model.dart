@@ -5,9 +5,9 @@ class ThoughtModel {
   final ThoughtAuthor? author;
   final String content;
   final String visibility;
-  final String? mood;
-  final int reactionsCount;
+  final int likesCount;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   const ThoughtModel({
     required this.id,
@@ -15,37 +15,30 @@ class ThoughtModel {
     this.author,
     required this.content,
     required this.visibility,
-    this.mood,
-    required this.reactionsCount,
+    required this.likesCount,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory ThoughtModel.fromJson(Map<String, dynamic> json) {
     return ThoughtModel(
       id: json['id'] as String,
-      authorId: json['authorId'] as String,
+      authorId: json['authorId'] is String
+          ? json['authorId'] as String
+          : (json['authorId'] as Map<String, dynamic>)['_id'] as String? ?? '',
       author: json['author'] != null
           ? ThoughtAuthor.fromJson(json['author'] as Map<String, dynamic>)
           : null,
       content: json['content'] as String,
       visibility: json['visibility'] as String? ?? 'public',
-      mood: json['mood'] as String?,
-      reactionsCount: json['reactionsCount'] as int? ?? 0,
+      likesCount: json['likesCount'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'authorId': authorId,
-    'content': content,
-    'visibility': visibility,
-    'mood': mood,
-    'reactionsCount': reactionsCount,
-    'createdAt': createdAt.toIso8601String(),
-  };
 }
 
+/// Thought author info
 class ThoughtAuthor {
   final String? displayName;
   final String? username;
