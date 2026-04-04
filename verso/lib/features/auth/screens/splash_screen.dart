@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,6 +32,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _minTimeElapsed = false;
   bool _hasNavigated = false;
+  Timer? _minTimer;
+  Timer? _timeoutTimer;
 
   @override
   void initState() {
@@ -39,21 +42,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _startTimeoutTimer();
   }
 
+  @override
+  void dispose() {
+    _minTimer?.cancel();
+    _timeoutTimer?.cancel();
+    super.dispose();
+  }
+
   void _startMinimumTimer() {
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    _minTimer = Timer(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() {
           _minTimeElapsed = true;
         });
-        // Check immediately after timer completes
         _checkAndNavigate();
       }
     });
   }
 
-  /// Safety timeout - if auth check takes too long, go to welcome
   void _startTimeoutTimer() {
-    Future.delayed(const Duration(seconds: 5), () {
+    _timeoutTimer = Timer(const Duration(seconds: 5), () {
       if (mounted && !_hasNavigated) {
         if (kDebugMode) {
           debugPrint('[Splash] Timeout reached, forcing navigation to welcome');
