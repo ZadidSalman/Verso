@@ -79,4 +79,33 @@ class PoemRepository {
   Future<void> trackRead(String id) async {
     await _dio.post('/api/poems/$id/read');
   }
+
+  /// Save a draft (creates new draft or updates existing)
+  Future<PoemModel> saveDraft({
+    String? id,
+    required String title,
+    required String content,
+    required String language,
+    List<String>? mood,
+    List<String>? tags,
+  }) async {
+    if (id != null) {
+      return updatePoem(id, {
+        'title': title,
+        'content': content,
+        'language': language,
+        'mood': mood ?? [],
+        'tags': tags ?? [],
+        'status': 'draft',
+      });
+    }
+    return createPoem(
+      title: title.isEmpty ? 'Untitled' : title,
+      content: content,
+      language: language,
+      mood: mood,
+      tags: tags,
+      status: 'draft',
+    );
+  }
 }

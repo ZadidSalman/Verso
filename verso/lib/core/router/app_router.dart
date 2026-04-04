@@ -15,6 +15,7 @@ import '../../features/auth/screens/onboarding/onboarding_username_screen.dart';
 import '../../features/auth/screens/onboarding/onboarding_moods_screen.dart';
 import '../../features/auth/screens/onboarding/onboarding_language_screen.dart';
 import '../../features/feed/screens/feed_screen.dart';
+import '../../features/poem/screens/poem_editor_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -184,6 +185,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.feed,
         pageBuilder: (context, state) =>
             _buildPage(context, state, const FeedScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.poemEditor,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const PoemEditorScreen()),
       ),
     ],
 
