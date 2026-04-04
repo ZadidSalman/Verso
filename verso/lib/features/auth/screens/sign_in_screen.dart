@@ -259,55 +259,50 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
                           // Password field
                           Semantics(
-                                label: 'Password',
-                                child: SizedBox(
-                                  height: 56,
-                                  child: TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    textInputAction: TextInputAction.done,
-                                    onSubmitted: (_) => _onSubmit(),
-                                    decoration: InputDecoration(
-                                      hintText: 'Password',
-                                      filled: true,
-                                      fillColor: AppColors.surfaceVariant,
-                                      border: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide.none,
+                            label: 'Password',
+                            child: SizedBox(
+                              height: 56,
+                              child: TextField(
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _onSubmit(),
+                                decoration: InputDecoration(
+                                  hintText: 'Password',
+                                  filled: true,
+                                  fillColor: AppColors.surfaceVariant,
+                                  border: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  suffixIcon: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 150),
+                                    child: IconButton(
+                                      key: ValueKey(_obscurePassword),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
+                                        size: 20,
                                       ),
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      suffixIcon: AnimatedSwitcher(
-                                        duration: const Duration(
-                                          milliseconds: 150,
-                                        ),
-                                        child: IconButton(
-                                          key: ValueKey(_obscurePassword),
-                                          icon: Icon(
-                                            _obscurePassword
-                                                ? Icons.visibility_outlined
-                                                : Icons.visibility_off_outlined,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscurePassword =
-                                                  !_obscurePassword;
-                                            });
-                                          },
-                                        ),
-                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
                                     ),
                                   ),
                                 ),
-                              )
-                              .animate(target: inlineError != null ? 1 : 0)
-                              .shakeX(amount: 4, duration: 400.ms),
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(height: 8),
 

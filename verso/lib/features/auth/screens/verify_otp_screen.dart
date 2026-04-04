@@ -255,90 +255,77 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(6, (index) {
-                            final isFocused = _focusNodes[index].hasFocus;
                             final hasText = _controllers[index].text.isNotEmpty;
 
                             return Container(
-                                  width: 44,
-                                  height: 56,
-                                  margin: EdgeInsets.only(
-                                    left: index == 0 ? 0 : 8,
+                              width: 44,
+                              height: 56,
+                              margin: EdgeInsets.only(left: index == 0 ? 0 : 8),
+                              child: KeyboardListener(
+                                focusNode: FocusNode(),
+                                onKeyEvent: (event) {
+                                  if (event is KeyDownEvent &&
+                                      event.logicalKey ==
+                                          LogicalKeyboardKey.backspace &&
+                                      _controllers[index].text.isEmpty &&
+                                      index > 0) {
+                                    _focusNodes[index - 1].requestFocus();
+                                  }
+                                },
+                                child: TextField(
+                                  controller: _controllers[index],
+                                  focusNode: _focusNodes[index],
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 1,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: _hasError
+                                        ? AppColors.error
+                                        : AppColors.onSurface,
                                   ),
-                                  child: KeyboardListener(
-                                    focusNode: FocusNode(),
-                                    onKeyEvent: (event) {
-                                      if (event is KeyDownEvent &&
-                                          event.logicalKey ==
-                                              LogicalKeyboardKey.backspace &&
-                                          _controllers[index].text.isEmpty &&
-                                          index > 0) {
-                                        _focusNodes[index - 1].requestFocus();
-                                      }
-                                    },
-                                    child: TextField(
-                                      controller: _controllers[index],
-                                      focusNode: _focusNodes[index],
-                                      textAlign: TextAlign.center,
-                                      keyboardType: TextInputType.number,
-                                      maxLength: 1,
-                                      style: theme.textTheme.titleLarge
-                                          ?.copyWith(
-                                            color: _hasError
-                                                ? AppColors.error
-                                                : AppColors.onSurface,
-                                          ),
-                                      decoration: InputDecoration(
-                                        counterText: '',
-                                        filled: true,
-                                        fillColor: _hasError
-                                            ? AppColors.errorContainer
-                                                  .withValues(alpha: 0.1)
-                                            : hasText
-                                            ? AppColors.surfaceVariant
-                                            : AppColors.surface,
-                                        contentPadding: EdgeInsets.zero,
-                                        border: const OutlineInputBorder(
-                                          borderRadius: AppShapes.radiusSm,
-                                          borderSide: BorderSide(
-                                            color: AppColors.outlineVariant,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: AppShapes.radiusSm,
-                                          borderSide: BorderSide(
-                                            color: _hasError
-                                                ? AppColors.error
-                                                : AppColors.outlineVariant,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: AppShapes.radiusSm,
-                                          borderSide: BorderSide(
-                                            color: _hasError
-                                                ? AppColors.error
-                                                : AppColors.primary,
-                                            width: 2,
-                                          ),
-                                        ),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    filled: true,
+                                    fillColor: _hasError
+                                        ? AppColors.errorContainer.withValues(
+                                            alpha: 0.1,
+                                          )
+                                        : hasText
+                                        ? AppColors.surfaceVariant
+                                        : AppColors.surface,
+                                    contentPadding: EdgeInsets.zero,
+                                    border: const OutlineInputBorder(
+                                      borderRadius: AppShapes.radiusSm,
+                                      borderSide: BorderSide(
+                                        color: AppColors.outlineVariant,
                                       ),
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      onChanged: (value) =>
-                                          _onOtpChanged(index, value),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: AppShapes.radiusSm,
+                                      borderSide: BorderSide(
+                                        color: _hasError
+                                            ? AppColors.error
+                                            : AppColors.outlineVariant,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: AppShapes.radiusSm,
+                                      borderSide: BorderSide(
+                                        color: _hasError
+                                            ? AppColors.error
+                                            : AppColors.primary,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
-                                )
-                                .animate(
-                                  target: isFocused && !disableAnimations
-                                      ? 1
-                                      : 0,
-                                )
-                                .scale(
-                                  begin: const Offset(1, 1),
-                                  end: const Offset(1.04, 1.04),
-                                  duration: 100.ms,
-                                );
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  onChanged: (value) =>
+                                      _onOtpChanged(index, value),
+                                ),
+                              ),
+                            );
                           }),
                         ),
                       )
@@ -354,67 +341,63 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 
                   // Verify code button
                   Semantics(
-                        button: true,
-                        label: 'Verify OTP code',
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: AppShapes.sm,
-                              disabledBackgroundColor: AppColors.surfaceVariant,
-                              disabledForegroundColor: AppColors
-                                  .onSurfaceVariant
-                                  .withValues(alpha: 0.5),
-                            ),
-                            onPressed: (_isComplete && !isLoading)
-                                ? _submitOtp
-                                : null,
-                            child: isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.surface,
-                                    ),
-                                  )
-                                : Text(
-                                    'Verify code',
-                                    style: theme.textTheme.labelLarge?.copyWith(
-                                      color: _isComplete
-                                          ? AppColors.surface
-                                          : AppColors.onSurfaceVariant
-                                                .withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                          ),
+                    button: true,
+                    label: 'Verify OTP code',
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: AppShapes.sm,
+                          disabledBackgroundColor: AppColors.surfaceVariant,
+                          disabledForegroundColor: AppColors.onSurfaceVariant
+                              .withValues(alpha: 0.5),
                         ),
-                      )
-                      .animate(
-                        target: _isComplete && !disableAnimations ? 1 : 0,
-                      )
-                      .custom(
-                        duration: 300.ms,
-                        builder: (context, value, child) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.3 * value,
-                                  ),
-                                  blurRadius: 12 * value,
-                                  spreadRadius: 2 * value,
+                        onPressed: (_isComplete && !isLoading)
+                            ? _submitOtp
+                            : null,
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.surface,
                                 ),
-                              ],
-                              borderRadius: AppShapes.radiusSm,
-                            ),
-                            child: child,
-                          );
-                        },
+                              )
+                            : Text(
+                                'Verify code',
+                                style: theme.textTheme.labelLarge?.copyWith(
+                                  color: _isComplete
+                                      ? AppColors.surface
+                                      : AppColors.onSurfaceVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                ),
+                              ),
                       ),
+                    ),
+                  ).animate().custom(
+                    duration: 300.ms,
+                    builder: (context, value, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(
+                                alpha: _isComplete ? 0.3 * value : 0,
+                              ),
+                              blurRadius: _isComplete ? 12 * value : 0,
+                              spreadRadius: _isComplete ? 2 * value : 0,
+                            ),
+                          ],
+                          borderRadius: AppShapes.radiusSm,
+                        ),
+                        child: child,
+                      );
+                    },
+                  ),
 
                   const SizedBox(height: 20),
 

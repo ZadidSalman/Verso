@@ -197,94 +197,87 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                           // Email Field
                           Semantics(
-                                label: 'Email address',
-                                child: SizedBox(
-                                  height: 56,
-                                  child: TextField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: InputDecoration(
-                                      prefixIcon: const Icon(
-                                        Icons.email_outlined,
-                                        size: 20,
-                                      ),
-                                      hintText: 'your@email.com',
-                                      filled: true,
-                                      fillColor: AppColors.surfaceVariant,
-                                      border: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                      ),
+                            label: 'Email address',
+                            child: SizedBox(
+                              height: 56,
+                              child: TextField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(
+                                    Icons.email_outlined,
+                                    size: 20,
+                                  ),
+                                  hintText: 'your@email.com',
+                                  filled: true,
+                                  fillColor: AppColors.surfaceVariant,
+                                  border: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
                                     ),
                                   ),
                                 ),
-                              )
-                              .animate(target: errorText != null ? 1 : 0)
-                              .shakeX(amount: 4, duration: 400.ms),
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(height: 16),
 
                           // Password Field
                           Semantics(
-                                label: 'Password',
-                                child: SizedBox(
-                                  height: 56,
-                                  child: TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    onSubmitted: (_) => _onSubmit(),
-                                    decoration: InputDecoration(
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline,
+                            label: 'Password',
+                            child: SizedBox(
+                              height: 56,
+                              child: TextField(
+                                controller: _passwordController,
+                                obscureText: _obscurePassword,
+                                onSubmitted: (_) => _onSubmit(),
+                                decoration: InputDecoration(
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline,
+                                    size: 20,
+                                  ),
+                                  hintText: 'At least 8 characters',
+                                  filled: true,
+                                  fillColor: AppColors.surfaceVariant,
+                                  border: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderRadius: AppShapes.radiusSm,
+                                    borderSide: BorderSide(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  suffixIcon: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 150),
+                                    child: IconButton(
+                                      key: ValueKey(_obscurePassword),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                         size: 20,
                                       ),
-                                      hintText: 'At least 8 characters',
-                                      filled: true,
-                                      fillColor: AppColors.surfaceVariant,
-                                      border: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderRadius: AppShapes.radiusSm,
-                                        borderSide: BorderSide(
-                                          color: AppColors.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      suffixIcon: AnimatedSwitcher(
-                                        duration: const Duration(
-                                          milliseconds: 150,
-                                        ),
-                                        child: IconButton(
-                                          key: ValueKey(_obscurePassword),
-                                          icon: Icon(
-                                            _obscurePassword
-                                                ? Icons.visibility_outlined
-                                                : Icons.visibility_off_outlined,
-                                            size: 20,
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscurePassword =
-                                                  !_obscurePassword;
-                                            });
-                                          },
-                                        ),
-                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
                                     ),
                                   ),
                                 ),
-                              )
-                              .animate(target: errorText != null ? 1 : 0)
-                              .shakeX(amount: 4, duration: 400.ms),
+                              ),
+                            ),
+                          ),
 
                           const SizedBox(height: 8),
 
