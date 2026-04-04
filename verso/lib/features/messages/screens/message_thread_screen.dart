@@ -8,6 +8,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
+import '../../../shared/widgets/poem_share_card.dart';
 import '../providers/message_provider.dart';
 import '../../../shared/models/message_model.dart';
 
@@ -283,27 +284,24 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final disableAnimations = MediaQuery.of(context).disableAnimations;
 
-    Widget bubble = Container(
-      constraints: const BoxConstraints(maxWidth: 240),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isOwn ? AppColors.primary : AppColors.surface,
-        borderRadius: BorderRadius.only(
-          topLeft: const Radius.circular(16),
-          topRight: const Radius.circular(16),
-          bottomLeft: Radius.circular(isOwn ? 16 : 4),
-          bottomRight: Radius.circular(isOwn ? 4 : 16),
-        ),
-      ),
-      child: Text(
-        message.content,
-        style: TextStyle(
-          color: isOwn ? AppColors.surface : AppColors.onSurface,
-          fontSize: 15,
-          height: 1.5,
-        ),
-      ),
-    );
+    Widget bubble;
+
+    if (message.type == 'poemShare') {
+      // Parse poem data from content (format: "poemId|title|excerpt|author")
+      final parts = message.content.split('|');
+      if (parts.length >= 4) {
+        bubble = PoemShareCard(
+          poemId: parts[0],
+          title: parts[1],
+          excerpt: parts[2],
+          authorName: parts[3],
+        );
+      } else {
+        bubble = _buildTextBubble(context, isOwn);
+      }
+    } else {
+      bubble = _buildTextBubble(context, isOwn);
+    }
 
     if (isNew && !disableAnimations) {
       bubble = bubble
@@ -326,6 +324,30 @@ class _MessageBubble extends StatelessWidget {
       child: Align(
         alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
         child: bubble,
+      ),
+    );
+  }
+
+  Widget _buildTextBubble(BuildContext context, bool isOwn) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 240),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isOwn ? AppColors.primary : AppColors.surface,
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(16),
+          topRight: const Radius.circular(16),
+          bottomLeft: Radius.circular(isOwn ? 16 : 4),
+          bottomRight: Radius.circular(isOwn ? 4 : 16),
+        ),
+      ),
+      child: Text(
+        message.content,
+        style: TextStyle(
+          color: isOwn ? AppColors.surface : AppColors.onSurface,
+          fontSize: 15,
+          height: 1.5,
+        ),
       ),
     );
   }
