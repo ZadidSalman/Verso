@@ -7,7 +7,7 @@ import {
   updateFcmToken,
   getPublicProfile,
 } from '../controllers/users.controller';
-import { requireAuth } from '../middleware/auth.middleware';
+import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ const router = Router();
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Check username availability (optionally authenticated to exclude current user)
-router.get('/check-username', requireAuth, checkUsername);
+router.get('/check-username', optionalAuth, checkUsername);
 
 // Current user profile
 router.get('/me', requireAuth, getProfile);

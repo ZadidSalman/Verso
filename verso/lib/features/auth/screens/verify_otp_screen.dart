@@ -149,7 +149,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go(AppRoutes.signUp);
+                context.go(AppRoutes.welcome);
               }
             },
           ),

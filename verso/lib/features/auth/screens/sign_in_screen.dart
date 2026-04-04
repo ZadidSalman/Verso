@@ -86,7 +86,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       }
     }
 
-    // Listen for errors
+    // Listen for state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthError) {
         if (next.message.toLowerCase().contains('verify')) {
@@ -97,11 +97,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
             ),
           );
-          // Navigate to OTP screen
-          context.push(
-            AppRoutes.verifyOtp,
-            extra: _emailController.text.trim(),
-          );
+          // Router redirect handles navigation to OTP — don't push manually
         } else if (!next.message.toLowerCase().contains('password') &&
             !next.message.toLowerCase().contains('credentials')) {
           // Show snackbar for non-inline errors
@@ -324,7 +320,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               onPressed: () {
-                                // TODO: Implement forgot password flow
+                                context.push(AppRoutes.forgotPassword);
                               },
                               child: Text(
                                 'Forgot password?',
