@@ -8,6 +8,8 @@ import mongoose from 'mongoose';
 
 import authRoutes from './routes/auth.routes';
 import usersRoutes from './routes/users.routes';
+import poemRoutes from './routes/poem.routes';
+import feedRoutes from './routes/feed.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -69,6 +71,8 @@ app.get('/health', (_, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/poems', poemRoutes);
+app.use('/api/feed', feedRoutes);
 
 // 404 handler
 app.use((_, res) => {
