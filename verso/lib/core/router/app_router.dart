@@ -20,6 +20,8 @@ import '../../features/poem/screens/poem_reader_screen.dart';
 import '../../features/discover/screens/discover_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/story/screens/story_editor_screen.dart';
+import '../../features/story/screens/story_part_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -53,6 +55,8 @@ class AppRoutes {
   static const story = '/story/:id';
   static const user = '/user/:username';
   static const poemEditor = '/editor/poem';
+  static const storyEditor = '/write/story';
+  static const storyPart = '/story/:storyId/part/:partId';
 }
 
 /// GoRouter provider with auth redirect
@@ -223,6 +227,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.notifications,
         pageBuilder: (context, state) =>
             _buildPage(context, state, const NotificationsScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.storyEditor,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const StoryEditorScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.storyPart,
+        pageBuilder: (context, state) {
+          final storyId = state.pathParameters['storyId'] ?? '';
+          final partId = state.pathParameters['partId'] ?? '';
+          return _buildPage(
+            context,
+            state,
+            StoryPartScreen(storyId: storyId, partId: partId),
+          );
+        },
       ),
     ],
 

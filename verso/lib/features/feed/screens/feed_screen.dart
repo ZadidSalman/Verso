@@ -12,7 +12,9 @@ import '../../../shared/widgets/poem_card.dart';
 import '../../../shared/widgets/mood_filter_bar.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
 import '../../../shared/widgets/comment_sheet.dart';
+import '../../../shared/widgets/notification_bell.dart';
 import '../../poem/providers/engagement_provider.dart';
+import '../../thought/widgets/thought_composer_sheet.dart';
 
 /// Feed screen — main screen after authentication
 ///
@@ -88,10 +90,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
-              ),
+              const NotificationBell(),
               IconButton(icon: const Icon(Icons.search), onPressed: () {}),
               const SizedBox(width: 8),
             ],
@@ -241,9 +240,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       // We use RefreshIndicator with a nested ListView approach instead.
       // For now, pull-to-refresh is handled by the feed notifier's refresh().
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.push(AppRoutes.poemEditor);
-        },
+        onPressed: () => ThoughtComposerSheet.show(context),
         backgroundColor: AppColors.primary,
         shape: AppShapes.xl,
         child: const Icon(Icons.edit_outlined, color: AppColors.surface),
