@@ -90,7 +90,7 @@ export async function createDuel(req: Request, res: Response): Promise<void> {
 
 export async function getDuel(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid duel ID.' });
@@ -116,7 +116,7 @@ export async function getDuel(req: Request, res: Response): Promise<void> {
 
 export async function acceptDuel(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { challengeePoemId } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -167,7 +167,7 @@ export async function acceptDuel(req: Request, res: Response): Promise<void> {
 
 export async function voteDuel(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { side } = req.body; // 'challenger' or 'challengee'
 
     if (!['challenger', 'challengee'].includes(side)) {
@@ -205,7 +205,7 @@ export async function voteDuel(req: Request, res: Response): Promise<void> {
     }
 
     // Record vote
-    duel.voterIds.push(req.user!._id);
+    duel.voterIds.push(req.user!._id as any);
     if (side === 'challenger') {
       duel.votesForChallenger += 1;
     } else {

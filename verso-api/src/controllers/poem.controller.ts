@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Poem, IPoem } from '../models/Poem.model';
 import { User } from '../models/User.model';
-import { uploadAudio } from '../services/cloudinary.service';
+import { uploadAudio as uploadToCloudinary } from '../services/cloudinary.service';
 import mongoose from 'mongoose';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ export async function createPoem(req: Request, res: Response): Promise<void> {
 
 export async function getPoem(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -139,7 +139,7 @@ export async function getPoem(req: Request, res: Response): Promise<void> {
 
 export async function updatePoem(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -192,7 +192,7 @@ export async function updatePoem(req: Request, res: Response): Promise<void> {
 
 export async function deletePoem(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -229,7 +229,7 @@ export async function deletePoem(req: Request, res: Response): Promise<void> {
 
 export async function publishPoem(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -270,7 +270,7 @@ export async function publishPoem(req: Request, res: Response): Promise<void> {
 
 export async function getPoemsByUsername(req: Request, res: Response): Promise<void> {
   try {
-    const { username } = req.params;
+    const username = req.params.username as string;
     const { limit = '20', cursor } = req.query;
 
     const user = await User.findOne({ username: username.toLowerCase() });
@@ -317,7 +317,7 @@ export async function getPoemsByUsername(req: Request, res: Response): Promise<v
 
 export async function trackRead(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -339,7 +339,7 @@ export async function trackRead(req: Request, res: Response): Promise<void> {
 
 export async function uploadAudio(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -362,7 +362,7 @@ export async function uploadAudio(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const audioUrl = await uploadAudio(req.file);
+    const audioUrl = await uploadToCloudinary(req.file);
     poem.audioUrl = audioUrl;
     await poem.save();
 
@@ -379,7 +379,7 @@ export async function uploadAudio(req: Request, res: Response): Promise<void> {
 
 export async function uploadVideo(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid poem ID.' });
@@ -402,7 +402,7 @@ export async function uploadVideo(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const videoUrl = await uploadAudio(req.file); // Reuse cloudinary service (same upload function)
+    const videoUrl = await uploadToCloudinary(req.file);
     poem.videoUrl = videoUrl;
     await poem.save();
 

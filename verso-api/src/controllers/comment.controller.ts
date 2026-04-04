@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { Comment } from '../models/Comment.model';
 import { Poem } from '../models/Poem.model';
-import { User } from '../models/User.model';
 import mongoose from 'mongoose';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,7 +58,7 @@ export async function createComment(req: Request, res: Response): Promise<void> 
 
 export async function getComments(req: Request, res: Response): Promise<void> {
   try {
-    const { targetId } = req.params;
+    const targetId = req.params.targetId as string;
     const { targetType, cursor, limit = '20' } = req.query;
 
     if (!targetId || !targetType) {
@@ -111,7 +110,7 @@ export async function getComments(req: Request, res: Response): Promise<void> {
 
 export async function deleteComment(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid comment ID.' });

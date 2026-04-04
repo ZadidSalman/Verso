@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import { Conversation } from '../models/Conversation.model';
 import { Message } from '../models/Message.model';
-import { User } from '../models/User.model';
-import { Poem } from '../models/Poem.model';
 import mongoose from 'mongoose';
 
 function formatConversation(conv: any, userId: string) {
@@ -101,7 +99,7 @@ export async function findOrCreateConversation(req: Request, res: Response): Pro
 
 export async function getMessages(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { cursor, limit = '30' } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -143,7 +141,7 @@ export async function getMessages(req: Request, res: Response): Promise<void> {
 
 export async function markConversationRead(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid conversation ID.' });
@@ -167,7 +165,7 @@ export async function markConversationRead(req: Request, res: Response): Promise
 
 export async function sendMessage(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { content, type } = req.body;
 
     if (!content || content.trim().length === 0) {
@@ -205,11 +203,11 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
 
     // Increment unread count for other participant
     const otherId = conversation.participantIds.find(
-      (pid: mongoose.Types.ObjectId) => pid.toString() !== req.user!._id.toString()
+      (pid: any) => pid.toString() !== req.user!._id.toString()
     );
     if (otherId) {
-      const currentUnread = conversation.unreadCounts.get(otherId.toString()) || 0;
-      conversation.unreadCounts.set(otherId.toString(), currentUnread + 1);
+      const currentUnread = (conversation.unreadCounts as any).get(otherId.toString()) || 0;
+      (conversation.unreadCounts as any).set(otherId.toString(), currentUnread + 1);
     }
     await conversation.save();
 

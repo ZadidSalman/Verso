@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 
 export async function followUser(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const followerId = req.user!._id;
 
     // Can't follow yourself
@@ -84,7 +84,7 @@ export async function followUser(req: Request, res: Response): Promise<void> {
 
 export async function unfollowUser(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const followerId = req.user!._id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -131,7 +131,7 @@ export async function unfollowUser(req: Request, res: Response): Promise<void> {
 
 export async function getFollowStatus(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const followerId = req.user!._id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -160,7 +160,7 @@ export async function getFollowStatus(req: Request, res: Response): Promise<void
 
 export async function getFollowers(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { limit = '20', cursor } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -206,7 +206,7 @@ export async function getFollowers(req: Request, res: Response): Promise<void> {
 
 export async function getFollowing(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { limit = '20', cursor } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {

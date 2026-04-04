@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { Notification } from '../models/Notification.model';
-import { User } from '../models/User.model';
 import mongoose from 'mongoose';
 
 const POETIC_MESSAGES: Record<string, string> = {
@@ -40,8 +39,8 @@ export async function createNotification({
     recipientId,
     type,
     actorId,
-    entityId: entityId || null,
-    entityType: entityType || null,
+    ...(entityId ? { entityId } : {}),
+    ...(entityType ? { entityType } : {}),
     poeticMessage,
     isRead: false,
   });
@@ -113,7 +112,7 @@ export async function markAllAsRead(req: Request, res: Response): Promise<void> 
 
 export async function markAsRead(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid notification ID.' });

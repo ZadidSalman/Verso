@@ -58,7 +58,7 @@ export async function likeTarget(req: Request, res: Response): Promise<void> {
 
 export async function unlikeTarget(req: Request, res: Response): Promise<void> {
   try {
-    const { targetId } = req.params;
+    const targetId = req.params.targetId as string;
     const { targetType } = req.query;
 
     if (!targetId || !targetType) {
@@ -100,7 +100,7 @@ export async function unlikeTarget(req: Request, res: Response): Promise<void> {
 
 export async function getLikeStatus(req: Request, res: Response): Promise<void> {
   try {
-    const { targetId } = req.params;
+    const targetId = req.params.targetId as string;
     const { targetType } = req.query;
 
     if (!targetId || !targetType) {

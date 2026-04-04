@@ -1,7 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
 let io: SocketServer | null = null;
 
@@ -63,7 +62,7 @@ export function initSocket(server: HttpServer) {
     });
 
     // Mark as read
-    socket.on('mark_read', (data: { conversationId: string }) => {
+    socket.on('mark_read', (_data: { conversationId: string }) => {
       // Handled via REST API for DB persistence
     });
 

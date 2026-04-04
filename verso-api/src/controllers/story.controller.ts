@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { Story } from '../models/Story.model';
 import { StoryPart } from '../models/StoryPart.model';
-import { User } from '../models/User.model';
 import mongoose from 'mongoose';
 
 function storyWithAuthor(story: any) {
@@ -111,7 +110,7 @@ export async function createStory(req: Request, res: Response): Promise<void> {
 
 export async function getStory(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid story ID.' });
       return;
@@ -136,7 +135,7 @@ export async function getStory(req: Request, res: Response): Promise<void> {
 
 export async function getStoryParts(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     if (!mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid story ID.' });
       return;
@@ -159,7 +158,8 @@ export async function getStoryParts(req: Request, res: Response): Promise<void> 
 
 export async function getStoryPart(req: Request, res: Response): Promise<void> {
   try {
-    const { id, partId } = req.params;
+    const id = req.params.id as string;
+    const partId = req.params.partId as string;
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(partId)) {
       res.status(400).json({ message: 'Invalid ID.' });
       return;
@@ -194,7 +194,7 @@ export async function getStoryPart(req: Request, res: Response): Promise<void> {
 
 export async function addStoryPart(req: Request, res: Response): Promise<void> {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { title, content, language, mood, coverImageUrl, parentPartId, branchLabel, status } = req.body;
 
     if (!title || !content) {
