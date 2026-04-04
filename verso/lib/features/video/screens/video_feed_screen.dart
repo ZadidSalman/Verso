@@ -410,9 +410,9 @@ class _BottomInfo extends StatelessWidget {
 
         // Snippet
         Text(
-          poem.content.length > 100
-              ? '${poem.content.substring(0, 100)}…'
-              : poem.content,
+          (poem.content ?? '').length > 100
+              ? '${(poem.content ?? '').substring(0, 100)}…'
+              : poem.content ?? '',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: Colors.white.withValues(alpha: 0.8),
           ),

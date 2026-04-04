@@ -334,7 +334,7 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
           const SizedBox(height: 32),
 
           // Poem body
-          _PoemBody(content: poem.content, language: poem.language)
+          _PoemBody(content: poem.content ?? '', language: poem.language)
               .animate(delay: disableAnimations ? Duration.zero : 300.ms)
               .fadeIn(
                 duration: disableAnimations

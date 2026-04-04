@@ -186,7 +186,7 @@ class PoemCard extends StatelessWidget {
 
               // Content preview
               Text(
-                poem.content,
+                poem.content ?? '',
                 style: AppTypography.englishPoem.copyWith(
                   fontSize: 14,
                   color: AppColors.onSurfaceVariant,
