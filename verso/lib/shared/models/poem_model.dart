@@ -35,7 +35,7 @@ class PoemModel {
   final String authorId;
   final PoemAuthor? author;
   final String title;
-  final String content;
+  final String? content;
   final String slug;
   final String language;
   final List<String> mood;
@@ -65,7 +65,7 @@ class PoemModel {
     required this.authorId,
     this.author,
     required this.title,
-    required this.content,
+    this.content,
     required this.slug,
     required this.language,
     required this.mood,
@@ -99,7 +99,7 @@ class PoemModel {
           ? PoemAuthor.fromJson(json['author'] as Map<String, dynamic>)
           : null,
       title: json['title'] as String,
-      content: json['content'] as String,
+      content: json['content'] as String? ?? '',
       slug: json['slug'] as String,
       language: json['language'] as String? ?? 'en',
       mood: json['mood'] != null ? List<String>.from(json['mood'] as List) : [],
