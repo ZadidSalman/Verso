@@ -19,6 +19,7 @@ import '../../features/poem/screens/poem_editor_screen.dart';
 import '../../features/poem/screens/poem_reader_screen.dart';
 import '../../features/discover/screens/discover_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 
 /// Route paths
 class AppRoutes {
@@ -217,6 +218,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final username = state.pathParameters['username'] ?? '';
           return _buildPage(context, state, ProfileScreen(username: username));
         },
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        pageBuilder: (context, state) =>
+            _buildPage(context, state, const NotificationsScreen()),
       ),
     ],
 
