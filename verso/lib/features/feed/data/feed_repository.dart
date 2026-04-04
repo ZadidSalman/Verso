@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../shared/models/poem_model.dart';
 
@@ -14,16 +15,26 @@ class FeedRepository {
     String? language,
     String? type,
   }) async {
-    final response = await _dio.get(
-      '/api/feed',
-      queryParameters: {
-        if (cursor != null) 'cursor': cursor,
-        'limit': limit,
-        if (mood != null) 'mood': mood,
-        if (language != null) 'language': language,
-        if (type != null) 'type': type,
-      },
-    );
-    return FeedResponse.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await _dio.get(
+        '/api/feed',
+        queryParameters: {
+          if (cursor != null) 'cursor': cursor,
+          'limit': limit,
+          if (mood != null) 'mood': mood,
+          if (language != null) 'language': language,
+          if (type != null) 'type': type,
+        },
+      );
+      if (kDebugMode) {
+        debugPrint('[FEED] Raw response: ${response.data}');
+      }
+      return FeedResponse.fromJson(response.data as Map<String, dynamic>);
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('[FEED] Error fetching feed: $e\n$stack');
+      }
+      rethrow;
+    }
   }
 }
