@@ -12,6 +12,7 @@ import poemRoutes from './routes/poem.routes';
 import feedRoutes from './routes/feed.routes';
 import likeRoutes from './routes/like.routes';
 import commentRoutes from './routes/comment.routes';
+import storyRoutes from './routes/story.routes';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP SETUP
@@ -77,6 +78,7 @@ app.use('/api/poems', poemRoutes);
 app.use('/api/feed', feedRoutes);
 app.use('/api/likes', likeRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/stories', storyRoutes);
 
 // 404 handler
 app.use((_, res) => {
