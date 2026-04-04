@@ -83,7 +83,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Main content
           SafeArea(
             child: Padding(
@@ -91,92 +91,142 @@ class WelcomeScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Spacer(flex: 2),
-                  
+
                   // Icon
                   Semantics(
-                    label: 'Verso Logo',
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.edit_outlined, // Placeholder for Quill SVG
-                        size: 40,
-                        color: AppColors.primary,
+                        label: 'Verso Logo',
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.edit_outlined, // Placeholder for Quill SVG
+                            size: 40,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                      .animate()
+                      .scale(
+                        begin: const Offset(0.7, 0.7),
+                        end: const Offset(1, 1),
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.expressive,
+                        curve: AppCurves.spring,
+                      )
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.expressive,
                       ),
-                    ),
-                  ).animate(target: disableAnimations ? 1 : 0)
-                   .scale(begin: const Offset(0.7, 0.7), end: const Offset(1, 1), duration: AppDurations.expressive, curve: AppCurves.spring)
-                   .fadeIn(duration: AppDurations.expressive),
-                   
+
                   const SizedBox(height: 24),
-                  
+
                   // Title
                   Text(
-                    'Verso',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.onSurface,
-                    ), // Playfair 700
-                  ).animate(delay: disableAnimations ? 0.ms : 150.ms, target: disableAnimations ? 1 : 0)
-                   .slideY(begin: 0.15, end: 0, duration: AppDurations.emphasized, curve: AppCurves.sheetOpen)
-                   .fadeIn(duration: AppDurations.emphasized),
-                   
+                        'Verso',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onSurface,
+                        ), // Playfair 700
+                      )
+                      .animate(delay: disableAnimations ? 0.ms : 150.ms)
+                      .slideY(
+                        begin: 0.15,
+                        end: 0,
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.emphasized,
+                        curve: AppCurves.sheetOpen,
+                      )
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.emphasized,
+                      ),
+
                   const SizedBox(height: 8),
-                  
+
                   // Subtitle
                   Text(
-                    'Where words find their world.',
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ).animate(delay: disableAnimations ? 0.ms : 350.ms, target: disableAnimations ? 1 : 0)
-                   .fadeIn(duration: AppDurations.standard),
-                   
+                        'Where words find their world.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      )
+                      .animate(delay: disableAnimations ? 0.ms : 350.ms)
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.standard,
+                      ),
+
                   const Spacer(flex: 3),
-                  
+
                   // CTA Button
                   Semantics(
-                    button: true,
-                    label: 'Sign up to begin your story',
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          shape: AppShapes.sm,
+                        button: true,
+                        label: 'Sign up to begin your story',
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: AppShapes.sm,
+                            ),
+                            onPressed: () => context.push(AppRoutes.signUp),
+                            child: Text(
+                              'Begin your story',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: AppColors.surface,
+                              ),
+                            ),
+                          ),
                         ),
-                        onPressed: () => context.push(AppRoutes.signUp),
-                        child: Text(
-                          'Begin your story',
-                          style: theme.textTheme.labelLarge?.copyWith(color: AppColors.surface),
-                        ),
+                      )
+                      .animate(delay: disableAnimations ? 0.ms : 550.ms)
+                      .slideY(
+                        begin: 0.2,
+                        end: 0,
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.emphasized,
+                        curve: AppCurves.sheetOpen,
+                      )
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.emphasized,
                       ),
-                    ),
-                  ).animate(delay: disableAnimations ? 0.ms : 550.ms, target: disableAnimations ? 1 : 0)
-                   .slideY(begin: 0.2, end: 0, duration: AppDurations.emphasized, curve: AppCurves.sheetOpen)
-                   .fadeIn(duration: AppDurations.emphasized),
-                   
+
                   const SizedBox(height: 12),
-                  
+
                   // Secondary link
                   Semantics(
-                    button: true,
-                    label: 'Sign in to existing account',
-                    child: TextButton(
-                      onPressed: () => context.push(AppRoutes.signIn),
-                      child: Text(
-                        'Already a poet? Sign in',
-                        style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.primary),
+                        button: true,
+                        label: 'Sign in to existing account',
+                        child: TextButton(
+                          onPressed: () => context.push(AppRoutes.signIn),
+                          child: Text(
+                            'Already a poet? Sign in',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      )
+                      .animate(delay: disableAnimations ? 0.ms : 750.ms)
+                      .fadeIn(
+                        duration: disableAnimations
+                            ? Duration.zero
+                            : AppDurations.standard,
                       ),
-                    ),
-                  ).animate(delay: disableAnimations ? 0.ms : 750.ms, target: disableAnimations ? 1 : 0)
-                   .fadeIn(duration: AppDurations.standard),
-                   
+
                   const SizedBox(height: 16), // safe bottom
                 ],
               ),
