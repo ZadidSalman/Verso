@@ -44,6 +44,13 @@ class _CommentSheetState extends ConsumerState<CommentSheet> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool _isPosting = false;
+  late final bool disableAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    disableAnimations = MediaQuery.of(context).disableAnimations;
+  }
 
   @override
   void dispose() {
