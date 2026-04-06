@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -8,26 +9,92 @@ import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
 import '../providers/notification_provider.dart';
 
-/// Notifications screen with A19 staggered entrance
-class NotificationsScreen extends ConsumerWidget {
+/// Notifications screen with A13 bell bounce and A19 staggered entrance
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _bellController;
+  bool _hasUnread = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bellController = AnimationController(
+      vsync: this,
+      duration: AppDurations.expressive,
+    );
+  }
+
+  @override
+  void dispose() {
+    _bellController.dispose();
+    super.dispose();
+  }
+
+  void _triggerBellBounce() {
+    if (MediaQuery.of(context).disableAnimations) return;
+    _bellController.forward(from: 0).then((_) {
+      if (mounted) _bellController.reverse();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final notificationsAsync = ref.watch(notificationListProvider);
     final disableAnimations = MediaQuery.of(context).disableAnimations;
+
+    ref.listen<AsyncValue>(notificationListProvider, (previous, next) {
+      if (next is AsyncData) {
+        final data = next.value;
+        final hasUnread = (data as dynamic).items.any(
+          (n) => n.isRead == false,
+        );
+        if (hasUnread && !_hasUnread) {
+          _triggerBellBounce();
+        }
+        _hasUnread = hasUnread;
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text(
-          'Alerts',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // A13 Bell bounce icon
+            AnimatedBuilder(
+              animation: _bellController,
+              builder: (context, child) {
+                return Transform.rotate(
+                  angle: _bellController.value * 0.3,
+                  child: Icon(
+                    _hasUnread
+                        ? Icons.notifications
+                        : Icons.notifications_outlined,
+                    color: _hasUnread ? AppColors.primary : null,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Alerts',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -132,6 +199,7 @@ class NotificationsScreen extends ConsumerWidget {
                       .read(notificationListProvider.notifier)
                       .markAsRead(notification.id),
                   delay: disableAnimations ? Duration.zero : delay,
+                  disableAnimations: disableAnimations,
                 );
               },
             ),
@@ -169,12 +237,14 @@ class _NotificationListItem extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onMarkRead;
   final Duration delay;
+  final bool disableAnimations;
 
   const _NotificationListItem({
     required this.notification,
     required this.onTap,
     required this.onMarkRead,
     required this.delay,
+    this.disableAnimations = false,
   });
 
   @override
@@ -250,7 +320,7 @@ class _NotificationListItem extends StatelessWidget {
                           ),
                         ),
                         child: Icon(
-                          notification.type.icon,
+                          _typeIcon(notification.type),
                           size: 10,
                           color: Colors.white,
                         ),
@@ -303,7 +373,36 @@ class _NotificationListItem extends StatelessWidget {
           ),
         ),
       ),
+    ).animate(
+      delay: delay,
+    ).fadeIn(
+      duration: disableAnimations ? Duration.zero : AppDurations.standard,
+      curve: AppCurves.decelerate,
+    ).slideY(
+      begin: disableAnimations ? 0 : 0.06,
+      end: 0,
+      duration: disableAnimations ? Duration.zero : AppDurations.standard,
+      curve: AppCurves.sheetOpen,
     );
+  }
+
+  IconData _typeIcon(String type) {
+    switch (type) {
+      case 'poem_liked':
+      case 'storyPart_liked':
+      case 'thought_reacted':
+        return Icons.favorite;
+      case 'new_follower':
+        return Icons.person_add;
+      case 'comment':
+      case 'comment_story':
+        return Icons.chat_bubble;
+      case 'duel_invite':
+      case 'duel_result':
+        return Icons.gavel;
+      default:
+        return Icons.notifications;
+    }
   }
 
   Color _badgeColor(String type) {

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
 import '../providers/message_provider.dart';
 import '../../../shared/models/message_model.dart';
@@ -17,6 +19,7 @@ class ConversationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final convosAsync = ref.watch(conversationsProvider);
+    final noMotion = reducedMotion(context);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -47,7 +50,7 @@ class ConversationsScreen extends ConsumerWidget {
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
               Text(
-                'Could not load conversations.',
+                'The ink has dried. Try again.',
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 24),
@@ -98,6 +101,17 @@ class ConversationsScreen extends ConsumerWidget {
               return _ConversationListItem(
                 conversation: convo,
                 onTap: () => context.push('${AppRoutes.messages}/${convo.id}'),
+                index: index,
+                noMotion: noMotion,
+              ).animate(
+                delay: Duration(milliseconds: index * 50),
+              ).slideY(
+                begin: 0.15,
+                end: 0,
+                duration: AppDurations.emphasized,
+                curve: AppCurves.standard,
+              ).fadeIn(
+                duration: AppDurations.standard,
               );
             },
           );
@@ -111,9 +125,7 @@ class ConversationsScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: AppShapes.sheet,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -132,13 +144,13 @@ class ConversationsScreen extends ConsumerWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: AppColors.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: AppShapes.radiusXs,
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                   child: Text(
-                    'Start a conversation',
+                    'Find a poet',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -184,20 +196,25 @@ class ConversationsScreen extends ConsumerWidget {
   }
 }
 
-/// Conversation list item
+/// Conversation list item with staggered entrance A19
 class _ConversationListItem extends StatelessWidget {
   final ConversationModel conversation;
   final VoidCallback onTap;
+  final int index;
+  final bool noMotion;
 
   const _ConversationListItem({
     required this.conversation,
     required this.onTap,
+    required this.index,
+    required this.noMotion,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isUnread = conversation.unreadCount > 0;
+    final hasAvatar = conversation.otherUser?.avatarUrl != null;
 
     return Dismissible(
       key: ValueKey(conversation.id),
@@ -223,11 +240,16 @@ class _ConversationListItem extends StatelessWidget {
                 // Avatar
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppColors.surfaceVariant,
-                  child: const Icon(
-                    Icons.person,
-                    color: AppColors.onSurfaceVariant,
-                  ),
+                  backgroundColor: AppColors.primaryContainer,
+                  backgroundImage: hasAvatar
+                      ? NetworkImage(conversation.otherUser!.avatarUrl!)
+                      : null,
+                  child: hasAvatar
+                      ? null
+                      : const Icon(
+                          Icons.person,
+                          color: AppColors.onPrimaryContainer,
+                        ),
                 ),
                 const SizedBox(width: 12),
 
@@ -240,7 +262,7 @@ class _ConversationListItem extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              'Poet',
+                              conversation.otherUser?.id ?? 'Poet',
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: isUnread
                                     ? FontWeight.w600
@@ -253,24 +275,38 @@ class _ConversationListItem extends StatelessWidget {
                           Text(
                             _formatTime(conversation.lastMessageAt),
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                              color: isUnread
+                                  ? AppColors.primary
+                                  : AppColors.onSurfaceVariant,
+                              fontWeight: isUnread
+                                  ? FontWeight.w500
+                                  : FontWeight.w400,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        conversation.lastMessage.isEmpty
-                            ? 'Start a conversation'
-                            : conversation.lastMessage,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                          fontWeight: isUnread
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              conversation.lastMessage.isEmpty
+                                  ? 'A blank page awaits...'
+                                  : conversation.lastMessage,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                                fontWeight: isUnread
+                                    ? FontWeight.w500
+                                    : FontWeight.w400,
+                                fontStyle: conversation.lastMessage.isEmpty
+                                    ? FontStyle.italic
+                                    : FontStyle.normal,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -281,23 +317,24 @@ class _ConversationListItem extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: Container(
-                      width: 20,
-                      height: 20,
+                      constraints: const BoxConstraints(minWidth: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: const BoxDecoration(
                         color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: Center(
-                        child: Text(
-                          conversation.unreadCount > 9
-                              ? '9+'
-                              : '${conversation.unreadCount}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.surface,
-                          ),
+                      child: Text(
+                        conversation.unreadCount > 9
+                            ? '9+'
+                            : '${conversation.unreadCount}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.surface,
+                          fontWeight: FontWeight.w600,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),

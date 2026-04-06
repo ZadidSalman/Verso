@@ -135,7 +135,9 @@ const PoemSchema = new Schema<IPoem>(
 PoemSchema.index({ trendingScore: -1 });
 PoemSchema.index({ publishedAt: -1 });
 PoemSchema.index({ authorId: 1, publishedAt: -1 });
+PoemSchema.index({ authorId: 1, createdAt: -1 });
 PoemSchema.index({ mood: 1, trendingScore: -1 });
+PoemSchema.index({ mood: 1, status: 1 });
 PoemSchema.index({ language: 1, trendingScore: -1 });
 PoemSchema.index({ status: 1, publishedAt: -1 });
 PoemSchema.index({ videoUrl: 1, trendingScore: -1 });

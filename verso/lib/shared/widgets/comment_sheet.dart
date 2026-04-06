@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../features/poem/providers/engagement_provider.dart';
 
 /// Comment bottom sheet — draggable, with comment list + input
@@ -169,7 +171,13 @@ class _CommentSheetState extends ConsumerState<CommentSheet> {
                       itemCount: comments.length,
                       itemBuilder: (context, index) {
                         final comment = comments[index];
-                        return _CommentTile(comment: comment);
+                        return _CommentTile(
+                          comment: comment,
+                          delay: disableAnimations
+                              ? Duration.zero
+                              : Duration(milliseconds: index < 8 ? index * 60 : 0),
+                          disableAnimations: disableAnimations,
+                        );
                       },
                     );
                   },

@@ -21,8 +21,26 @@ class DuelScreen extends ConsumerStatefulWidget {
   ConsumerState<DuelScreen> createState() => _DuelScreenState();
 }
 
-class _DuelScreenState extends ConsumerState<DuelScreen> {
+class _DuelScreenState extends ConsumerState<DuelScreen>
+    with SingleTickerProviderStateMixin {
   String? _lastVoteTime;
+  late final AnimationController _rippleController;
+  double _rippleProgress = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _rippleController = AnimationController(
+      vsync: this,
+      duration: AppDurations.expressive,
+    );
+  }
+
+  @override
+  void dispose() {
+    _rippleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,23 +188,21 @@ class _DuelScreenState extends ConsumerState<DuelScreen> {
                         ),
                       ),
                     )
-                  : FilledButton(
-                      onPressed: () {
-                        // TODO: Show vote dialog
+                  : _VoteButtonWithRipple(
+                      onVote: () {
+                        if (reducedMotion(context)) {
+                          setState(
+                            () => _lastVoteTime = DateTime.now().toString(),
+                          );
+                          return;
+                        }
+                        _rippleController.forward(from: 0.0);
                         setState(
                           () => _lastVoteTime = DateTime.now().toString(),
                         );
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: AppShapes.sm,
-                      ),
-                      child: Text(
-                        'Cast your vote',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: AppColors.surface,
-                        ),
-                      ),
+                      rippleProgress: _rippleProgress,
+                      rippleController: _rippleController,
                     ),
             ),
 
@@ -262,7 +278,7 @@ class _DuelScreenState extends ConsumerState<DuelScreen> {
   }
 }
 
-/// Poet column with A11 animated progress bar
+/// Poet column with A12 live poll fill animation
 class _PoetColumn extends StatelessWidget {
   final String label;
   final Color color;
@@ -281,12 +297,13 @@ class _PoetColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final noMotion = reducedMotion(context);
 
     return TweenAnimationBuilder<double>(
       key: ValueKey(lastVoteTime),
       tween: Tween(begin: 0.0, end: percent),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
+      duration: noMotion ? Duration.zero : const Duration(milliseconds: 800),
+      curve: AppCurves.decelerate,
       builder: (context, value, child) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,14 +322,27 @@ class _PoetColumn extends StatelessWidget {
             ),
             const SizedBox(height: 4),
 
-            // Progress bar
+            // A12 Progress bar with smooth fill
             ClipRRect(
               borderRadius: AppShapes.radiusXs,
-              child: LinearProgressIndicator(
-                value: value,
-                minHeight: 6,
-                backgroundColor: AppColors.tertiaryContainer,
-                valueColor: AlwaysStoppedAnimation<Color>(color),
+              child: SizedBox(
+                height: 6,
+                child: Stack(
+                  children: [
+                    Container(
+                      color: AppColors.tertiaryContainer,
+                    ),
+                    AnimatedContainer(
+                      duration: noMotion ? Duration.zero : AppDurations.emphasized,
+                      curve: AppCurves.sheetOpen,
+                      width: MediaQuery.of(context).size.width * 0.5 * value,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: AppShapes.radiusXs,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -328,6 +358,105 @@ class _PoetColumn extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// A11 Vote button with ripple animation
+class _VoteButtonWithRipple extends StatefulWidget {
+  final VoidCallback onVote;
+  final double rippleProgress;
+  final AnimationController rippleController;
+
+  const _VoteButtonWithRipple({
+    required this.onVote,
+    required this.rippleProgress,
+    required this.rippleController,
+  });
+
+  @override
+  State<_VoteButtonWithRipple> createState() => _VoteButtonWithRippleState();
+}
+
+class _VoteButtonWithRippleState extends State<_VoteButtonWithRipple> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AnimatedBuilder(
+      animation: widget.rippleController,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Ripple rings
+            if (widget.rippleController.value > 0 &&
+                widget.rippleController.value < 1)
+              ...List.generate(3, (i) {
+                final delay = i * 0.15;
+                final progress = (widget.rippleController.value - delay)
+                    .clamp(0.0, 1.0);
+                return CustomPaint(
+                  painter: _RipplePainter(
+                    progress: progress,
+                    color: AppColors.primary.withValues(
+                      alpha: 0.4 * (1 - progress),
+                    ),
+                    strokeWidth: 2 * (1 - progress),
+                  ),
+                  size: Size.infinite,
+                );
+              }),
+            // Button
+            FilledButton(
+              onPressed: widget.onVote,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: AppShapes.sm,
+              ),
+              child: Text(
+                'Cast your vote',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: AppColors.surface,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// A11 Ripple painter for vote button
+class _RipplePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+
+  _RipplePainter({
+    required this.progress,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    final radius = size.width * 0.5 * progress;
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      radius,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RipplePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }
 

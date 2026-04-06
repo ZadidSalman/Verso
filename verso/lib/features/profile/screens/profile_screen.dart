@@ -61,6 +61,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               floating: false,
               pinned: true,
               backgroundColor: AppColors.background,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,

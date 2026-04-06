@@ -1,3 +1,13 @@
+/// Message status for read receipts
+typedef MessageStatus = String;
+
+class MessageStatuses {
+  MessageStatuses._();
+  static const sent = 'sent';
+  static const delivered = 'delivered';
+  static const read = 'read';
+}
+
 /// Message model
 class MessageModel {
   final String id;
@@ -6,6 +16,7 @@ class MessageModel {
   final MessageSender? sender;
   final String content;
   final String type;
+  final MessageStatus status;
   final List<String> readBy;
   final DateTime sentAt;
 
@@ -16,6 +27,7 @@ class MessageModel {
     this.sender,
     required this.content,
     required this.type,
+    this.status = MessageStatuses.sent,
     required this.readBy,
     required this.sentAt,
   });
@@ -30,10 +42,35 @@ class MessageModel {
           : null,
       content: json['content'] as String,
       type: json['type'] as String? ?? 'text',
+      status: json['status'] as String? ?? MessageStatuses.sent,
       readBy: json['readBy'] != null
           ? List<String>.from(json['readBy'] as List)
           : [],
       sentAt: DateTime.parse(json['sentAt'] as String),
+    );
+  }
+
+  MessageModel copyWith({
+    String? id,
+    String? conversationId,
+    String? senderId,
+    MessageSender? sender,
+    String? content,
+    String? type,
+    MessageStatus? status,
+    List<String>? readBy,
+    DateTime? sentAt,
+  }) {
+    return MessageModel(
+      id: id ?? this.id,
+      conversationId: conversationId ?? this.conversationId,
+      senderId: senderId ?? this.senderId,
+      sender: sender ?? this.sender,
+      content: content ?? this.content,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      readBy: readBy ?? this.readBy,
+      sentAt: sentAt ?? this.sentAt,
     );
   }
 }

@@ -66,9 +66,13 @@ const CommentSchema = new Schema<IComment>(
 
 // Index for fetching comments on a target
 CommentSchema.index({ targetId: 1, targetType: 1, createdAt: -1 });
+CommentSchema.index({ targetId: 1, createdAt: -1 });
 
 // Index for fetching replies to a comment
 CommentSchema.index({ parentCommentId: 1, createdAt: 1 });
+
+// Index for user's comments
+CommentSchema.index({ authorId: 1, createdAt: -1 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EXPORT

@@ -1,13 +1,13 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/theme/app_shapes.dart';
-import '../../../core/theme/app_animations.dart';
-import '../../../shared/models/collab_poem_model.dart';
-import '../providers/collab_provider.dart';
+const String PUSHER_APP_KEY = String.fromEnvironment('PUSHER_KEY', defaultValue: '');
+const String PUSHER_CLUSTER = String.fromEnvironment('PUSHER_CLUSTER', defaultValue: 'ap2');
 
 /// Collaborative poem screen with live stanza chain
 class CollabPoemScreen extends ConsumerStatefulWidget {
@@ -19,14 +19,98 @@ class CollabPoemScreen extends ConsumerStatefulWidget {
   ConsumerState<CollabPoemScreen> createState() => _CollabPoemScreenState();
 }
 
-class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen> {
+class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen>
+    with SingleTickerProviderStateMixin {
   final _stanzaController = TextEditingController();
   bool _isSubmitting = false;
   bool _showInput = false;
+  int _activeCollaborators = 1;
+  Timer? _collabPulseTimer;
+  late final AnimationController _branchController;
+  final List<String> _activeAuthors = ['You'];
+
+  PusherController? _pusher;
+  String get _channelName => 'collab-${widget.poemId}';
+
+  @override
+  void initState() {
+    super.initState();
+    _branchController = AnimationController(
+      vsync: this,
+      duration: AppDurations.expressive,
+    );
+    _initPusher();
+  }
+
+  Future<void> _initPusher() async {
+    if (PUSHER_APP_KEY.isEmpty) {
+      // No Pusher config — fall back to timer simulation
+      _startPulseTimer();
+      return;
+    }
+
+    _pusher = PusherController.getInstance();
+    try {
+      await _pusher!.init(
+        appKey: PUSHER_APP_KEY,
+        cluster: PUSHER_CLUSTER,
+        onConnectionStateChange: (state, reason) {
+          debugPrint('[Pusher] Connection: $state ($reason)');
+        },
+        onError: (error) {
+          debugPrint('[Pusher] Error: $error');
+        },
+      );
+
+      await _pusher!.subscribe(channelName: _channelName);
+      await _pusher!.bind(eventName: 'stanza_added', callback: (data) {
+        if (mounted) {
+          // Refresh the poem data when a new stanza is added
+          ref.invalidate(collabPoemProvider(widget.poemId));
+        }
+      });
+      await _pusher!.bind(eventName: 'collaborator_joined', callback: (data) {
+        if (mounted) {
+          setState(() {
+            _activeCollaborators = (data['count'] as int?) ?? _activeCollaborators;
+            if (!reducedMotion(context)) {
+              _branchController.forward(from: 0.0);
+            }
+          });
+        }
+      });
+
+      debugPrint('[Pusher] Subscribed to $_channelName');
+    } catch (e) {
+      debugPrint('[Pusher] Init failed: $e — falling back to timer');
+      _startPulseTimer();
+    }
+  }
+
+  void _startPulseTimer() {
+    _collabPulseTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (!mounted) return;
+      final rng = Random();
+      final newCount = 1 + rng.nextInt(3);
+      setState(() {
+        _activeCollaborators = newCount;
+        _activeAuthors = List.generate(
+          newCount,
+          (i) => i == 0 ? 'You' : 'Poet ${i + 1}',
+        );
+      });
+      if (!reducedMotion(context)) {
+        _branchController.forward(from: 0.0);
+      }
+    });
+  }
 
   @override
   void dispose() {
     _stanzaController.dispose();
+    _collabPulseTimer?.cancel();
+    _branchController.dispose();
+    _pusher?.unsubscribe(channelName: _channelName);
     super.dispose();
   }
 
@@ -66,6 +150,7 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final poemAsync = ref.watch(collabPoemProvider(widget.poemId));
+    final noMotion = MediaQuery.of(context).disableAnimations;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -113,6 +198,36 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen> {
               ],
             ),
           ),
+          // A23 Branch fork indicator
+          if (_activeCollaborators > 1 && !noMotion)
+            AnimatedBuilder(
+              animation: _branchController,
+              builder: (context, child) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomPaint(
+                        size: const Size(20, 16),
+                        painter: _BranchForkPainter(
+                          progress: _branchController.value,
+                          branches: _activeCollaborators,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$_activeCollaborators',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: poemAsync.when(
@@ -465,5 +580,58 @@ class _StanzaCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// A23 Branch fork painter — shows branching paths for collaborative editing
+class _BranchForkPainter extends CustomPainter {
+  final double progress;
+  final int branches;
+
+  _BranchForkPainter({required this.progress, required this.branches});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.8)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Main trunk
+    final trunkPath = Path();
+    trunkPath.moveTo(size.width / 2, size.height);
+    trunkPath.lineTo(size.width / 2, size.height * (1 - progress * 0.5));
+    canvas.drawPath(trunkPath, paint);
+
+    // Branches
+    for (int i = 0; i < branches - 1; i++) {
+      final branchPaint = Paint()
+        ..color = AppColors.secondary.withValues(alpha: 0.6)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+
+      final branchPath = Path();
+      final startX = size.width / 2;
+      final startY = size.height * (1 - progress * 0.3);
+      final direction = i.isEven ? -1 : 1;
+      final endX = startX + direction * size.width * 0.3 * progress;
+      final endY = startY - size.height * 0.3 * progress;
+
+      branchPath.moveTo(startX, startY);
+      branchPath.quadraticBezierTo(
+        startX + direction * size.width * 0.15,
+        startY - size.height * 0.15,
+        endX,
+        endY,
+      );
+      canvas.drawPath(branchPath, branchPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BranchForkPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.branches != branches;
   }
 }

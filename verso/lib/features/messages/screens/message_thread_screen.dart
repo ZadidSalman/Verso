@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,13 +31,14 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
   final _scrollController = ScrollController();
   late AnimationController _sendController;
   bool _isSending = false;
+  bool _isOtherTyping = false;
 
   @override
   void initState() {
     super.initState();
     _sendController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.standard,
     );
     // Mark as read on open
     ref.read(messageRepositoryProvider).markAsRead(widget.conversationId);
@@ -49,30 +52,36 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
     super.dispose();
   }
 
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: AppDurations.standard,
+        curve: AppCurves.decelerate,
+      );
+    }
+  }
+
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty || _isSending) return;
 
     setState(() => _isSending = true);
     _sendController.forward(from: 0);
 
+    final content = _controller.text.trim();
+    _controller.clear();
+
     try {
       await sendMessageAction(
         ref,
         widget.conversationId,
-        _controller.text.trim(),
+        content,
       );
-      _controller.clear();
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+      _scrollToBottom();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not send message.')),
+          const SnackBar(content: Text('The words could not be sent. Try again.')),
         );
       }
     } finally {
@@ -84,6 +93,7 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final messagesAsync = ref.watch(messagesProvider(widget.conversationId));
+    final noMotion = reducedMotion(context);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceVariant,
@@ -98,19 +108,32 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
           children: [
             const CircleAvatar(
               radius: 20,
-              backgroundColor: AppColors.surfaceVariant,
+              backgroundColor: AppColors.primaryContainer,
               child: Icon(
                 Icons.person,
                 size: 20,
-                color: AppColors.onSurfaceVariant,
+                color: AppColors.onPrimaryContainer,
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'Poet',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Poet',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (_isOtherTyping)
+                  Text(
+                    'writing...',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.primary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -127,11 +150,28 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
                 child: CircularProgressIndicator(color: AppColors.primary),
               ),
               error: (error, stack) => Center(
-                child: Text(
-                  'Could not load messages.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: AppColors.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'The pages are torn. Try again.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: () =>
+                          ref.refresh(messagesProvider(widget.conversationId)),
+                      child: const Text('Try again'),
+                    ),
+                  ],
                 ),
               ),
               data: (messages) {
@@ -157,21 +197,29 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  itemCount: messages.length,
+                  itemCount: messages.length + (_isOtherTyping ? 1 : 0),
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    if (_isOtherTyping && index == 0) {
+                      return const _TypingIndicator();
+                    }
+
+                    final messageIndex = _isOtherTyping ? index - 1 : index;
+                    final message = messages[messageIndex];
                     final isOwn =
                         message.senderId ==
                         'current-user-id'; // TODO: Get from auth
+                    final nextMessage = messageIndex > 0
+                        ? messages[messageIndex - 1]
+                        : null;
                     final isFirst =
-                        index == 0 ||
-                        messages[index - 1].senderId != message.senderId;
+                        nextMessage == null ||
+                        nextMessage.senderId != message.senderId;
 
                     return _MessageBubble(
                       message: message,
                       isOwn: isOwn,
                       isFirst: isFirst,
-                      isNew: index == 0,
+                      isNew: messageIndex == 0 && !noMotion,
                     );
                   },
                 );
@@ -191,16 +239,8 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
             child: SafeArea(
               top: false,
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.surfaceVariant,
-                    child: Icon(
-                      Icons.person,
-                      size: 16,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -229,7 +269,7 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   SizedBox(
                     width: 40,
                     height: 40,
@@ -248,19 +288,97 @@ class _MessageThreadScreenState extends ConsumerState<MessageThreadScreen>
                           shape: const CircleBorder(),
                           padding: EdgeInsets.zero,
                         ),
-                        child: const Icon(
-                          Icons.send,
+                        child: Icon(
+                          _isSending ? Icons.hourglass_empty : Icons.send,
                           size: 18,
                           color: AppColors.surface,
                         ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Typing indicator with animated dots
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator();
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(4),
+              bottomRight: Radius.circular(16),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (index) {
+              return AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final progress =
+                      (_controller.value + index * 0.2) % 1.0;
+                  final scale = 0.6 + 0.4 * (0.5 + 0.5 * (progress * 2 * 3.14159).sin());
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      margin: EdgeInsets.only(
+                        right: index < 2 ? 4 : 0,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.tertiary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -297,21 +415,22 @@ class _MessageBubble extends StatelessWidget {
           authorName: parts[3],
         );
       } else {
-        bubble = _buildTextBubble(context, isOwn);
+        bubble = _buildTextBubble(context);
       }
     } else {
-      bubble = _buildTextBubble(context, isOwn);
+      bubble = _buildTextBubble(context);
     }
 
     if (isNew && !disableAnimations) {
       bubble = bubble
           .animate()
-          .scale(
-            begin: const Offset(0.6, 0.6),
-            duration: const Duration(milliseconds: 200),
-            curve: AppCurves.spring,
+          .slideY(
+            begin: 0.3,
+            end: 0,
+            duration: AppDurations.standard,
+            curve: AppCurves.decelerate,
           )
-          .fadeIn(duration: const Duration(milliseconds: 150));
+          .fadeIn(duration: AppDurations.quick);
     }
 
     return Padding(
@@ -328,7 +447,10 @@ class _MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildTextBubble(BuildContext context, bool isOwn) {
+  Widget _buildTextBubble(BuildContext context) {
+    final theme = Theme.of(context);
+    final timeStr = _formatTime(message.sentAt);
+
     return Container(
       constraints: const BoxConstraints(maxWidth: 240),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -341,14 +463,53 @@ class _MessageBubble extends StatelessWidget {
           bottomRight: Radius.circular(isOwn ? 4 : 16),
         ),
       ),
-      child: Text(
-        message.content,
-        style: TextStyle(
-          color: isOwn ? AppColors.surface : AppColors.onSurface,
-          fontSize: 15,
-          height: 1.5,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message.content,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isOwn ? AppColors.surface : AppColors.onSurface,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                timeStr,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: isOwn
+                      ? AppColors.surface.withValues(alpha: 0.7)
+                      : AppColors.onSurfaceVariant,
+                ),
+              ),
+              if (isOwn) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  message.readBy.isNotEmpty
+                      ? Icons.done_all
+                      : Icons.done,
+                  size: 12,
+                  color: message.readBy.isNotEmpty
+                      ? AppColors.primaryContainer
+                      : AppColors.surface.withValues(alpha: 0.7),
+                ),
+              ],
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
   }
 }

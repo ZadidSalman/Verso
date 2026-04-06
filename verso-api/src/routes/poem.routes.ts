@@ -12,6 +12,8 @@ import {
   uploadVideo,
 } from '../controllers/poem.controller';
 import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
+import { rateLimit, rateLimiters } from '../middleware/rateLimiter';
+import { sanitizeBody } from '../middleware/sanitize';
 
 const router = Router();
 const audioUpload = multer({ dest: 'uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
@@ -39,16 +41,37 @@ router.get('/:id', optionalAuth, getPoem);
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Create a poem
-router.post('/', requireAuth, createPoem);
+router.post(
+  '/',
+  requireAuth,
+  sanitizeBody(['title', 'content', 'category', 'genre', 'tags'], {
+    allowedTags: ['br', 'p', 'em', 'strong', 'i', 'b'],
+    allowedAttributes: {},
+  }),
+  createPoem
+);
 
 // Update a poem
-router.put('/:id', requireAuth, updatePoem);
+router.put(
+  '/:id',
+  requireAuth,
+  sanitizeBody(['title', 'content', 'category', 'genre', 'tags'], {
+    allowedTags: ['br', 'p', 'em', 'strong', 'i', 'b'],
+    allowedAttributes: {},
+  }),
+  updatePoem
+);
 
 // Delete a poem
 router.delete('/:id', requireAuth, deletePoem);
 
 // Publish a draft poem
-router.post('/:id/publish', requireAuth, publishPoem);
+router.post(
+  '/:id/publish',
+  requireAuth,
+  rateLimit(rateLimiters.poemPublish),
+  publishPoem
+);
 
 // Upload audio recitation
 router.post('/:id/audio', requireAuth, audioUpload.single('audio'), uploadAudio);

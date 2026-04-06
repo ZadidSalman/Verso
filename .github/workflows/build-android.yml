@@ -1,4 +1,4 @@
-name: Build Android Release (APK)
+name: Build Android Release (AAB)
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
           printf '%s' "$GOOGLE_SERVICES_JSON_B64" | base64 -d > verso/android/app/google-services.json
 
       - name: Set up Flutter (stable)
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@v3
         with:
           channel: stable
           cache: true
@@ -37,19 +37,19 @@ jobs:
         working-directory: verso
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build release APK
+      - name: Build release AAB
         working-directory: verso
         run: |
-          flutter build apk --release \
+          flutter build appbundle --release \
             --dart-define=API_URL=https://verso-zjri.onrender.com \
             --dart-define=PUSHER_KEY=${{ secrets.PUSHER_KEY }} \
             --dart-define=PUSHER_CLUSTER=ap2 \
             --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
             --dart-define=POSTHOG_KEY=${{ secrets.POSTHOG_KEY }}
 
-      - name: Upload APK artifact
+      - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-apk-${{ github.sha }}
-          path: verso/build/app/outputs/flutter-apk/app-release.apk
+          name: release-aab-${{ github.sha }}
+          path: verso/build/app/outputs/bundle/release/app-release.aab
           retention-days: 30

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -405,34 +406,43 @@ class _PoemEditorScreenState extends ConsumerState<PoemEditorScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Poem body
-                    TextField(
-                      controller: _contentController,
-                      focusNode: _contentFocus,
-                      style: _language == 'en'
-                          ? AppTypography.englishPoem.copyWith(fontSize: 18)
-                          : AppTypography.banglaPoem.copyWith(fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: 'Begin here...',
-                        hintStyle:
-                            (_language == 'en'
-                                    ? AppTypography.englishPoem
-                                    : AppTypography.banglaPoem)
-                                .copyWith(
-                                  color: AppColors.onSurfaceVariant.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  fontSize: 18,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      maxLines: null,
-                      minLines: 10,
-                      textCapitalization: TextCapitalization.sentences,
+                    // Poem body with A01 cursor pulse
+                    Stack(
+                      children: [
+                        TextField(
+                          controller: _contentController,
+                          focusNode: _contentFocus,
+                          style: _language == 'en'
+                              ? AppTypography.englishPoem
+                              : AppTypography.banglaPoem,
+                          decoration: InputDecoration(
+                            hintText: 'Begin here...',
+                            hintStyle:
+                                (_language == 'en'
+                                        ? AppTypography.englishPoem
+                                        : AppTypography.banglaPoem)
+                                    .copyWith(
+                                      color: AppColors.onSurfaceVariant
+                                          .withValues(alpha: 0.5),
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          maxLines: null,
+                          minLines: 10,
+                          textCapitalization: TextCapitalization.sentences,
+                        ),
+                        // A01 Sage cursor pulse — shown when field is focused
+                        if (_contentFocus.hasFocus)
+                          Positioned(
+                            left: 2,
+                            top: 8,
+                            child: _CursorPulse(),
+                          ),
+                      ],
                     ),
 
                     const SizedBox(height: 16),
@@ -635,8 +645,7 @@ class _ToolbarButton extends StatelessWidget {
         icon: label != null
             ? Text(
                 label!,
-                style: TextStyle(
-                  fontSize: 14,
+                style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: isItalic ? FontWeight.w400 : FontWeight.w700,
                   fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
                   color: isActive
@@ -655,6 +664,73 @@ class _ToolbarButton extends StatelessWidget {
         constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         padding: EdgeInsets.zero,
       ),
+    );
+  }
+}
+
+/// A01 Sage cursor pulse — gentle breathing glow at the text cursor position.
+class _CursorPulse extends StatefulWidget {
+  const _CursorPulse();
+
+  @override
+  State<_CursorPulse> createState() => _CursorPulseState();
+}
+
+class _CursorPulseState extends State<_CursorPulse>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppDurations.prose,
+    )..repeat(reverse: true);
+    _opacity = Tween<double>(begin: 0.15, end: 0.5).animate(
+      CurvedAnimation(parent: _controller, curve: AppCurves.standard),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final noMotion = MediaQuery.of(context).disableAnimations;
+    if (noMotion) {
+      return Container(
+        width: 2,
+        height: 24,
+        color: AppColors.primary.withValues(alpha: 0.3),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _opacity,
+      builder: (context, child) {
+        return Container(
+          width: 2,
+          height: 24,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: _opacity.value),
+            borderRadius: AppShapes.radiusXs,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(
+                  alpha: _opacity.value * 0.4,
+                ),
+                blurRadius: 8,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

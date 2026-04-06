@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../../shared/models/story_model.dart';
 
 enum _NavDirection { forward, backward, none }
@@ -119,7 +121,13 @@ class _StoryPartScreenState extends ConsumerState<StoryPartScreen>
     ThemeData theme,
     bool disableAnimations,
   ) {
-    return CustomScrollView(
+    final totalParts = _part!.partNumber + 1; // Simplified — in production, get from story
+    final hasPrev = _part!.partNumber > 1;
+    final hasNext = _part!.partNumber < totalParts;
+
+    return Stack(
+      children: [
+        CustomScrollView(
       slivers: [
         // Progress bar at top
         SliverToBoxAdapter(
@@ -297,6 +305,89 @@ class _StoryPartScreenState extends ConsumerState<StoryPartScreen>
         SliverFillRemaining(hasScrollBody: false, child: SizedBox.shrink()),
       ],
     );
+
+    // A21 Prev/Next navigation tap zones
+    if (!disableAnimations) {
+      // Left tap zone — previous part
+      if (hasPrev) {
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 80,
+          child: GestureDetector(
+            onTap: () => _navigateWithAnimation(context, _part!.partNumber - 1),
+            behavior: HitTestBehavior.translucent,
+            child: Container(color: Colors.transparent),
+          ).animate().fadeIn(duration: AppDurations.standard),
+        );
+      }
+
+      // Right tap zone — next part
+      if (hasNext) {
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: 80,
+          child: GestureDetector(
+            onTap: () => _navigateWithAnimation(context, _part!.partNumber + 1),
+            behavior: HitTestBehavior.translucent,
+            child: Container(color: Colors.transparent),
+          ).animate().fadeIn(duration: AppDurations.standard),
+        );
+      }
+
+      // Navigation arrow indicators at bottom
+      Positioned(
+        bottom: 100,
+        left: hasPrev ? 16 : 0,
+        right: hasNext ? 16 : 0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (hasPrev)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.chevron_left, color: AppColors.primary),
+              ).animate().slideX(begin: -0.2, end: 0).fadeIn(),
+            if (hasNext)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.chevron_right, color: AppColors.primary),
+              ).animate().slideX(begin: 0.2, end: 0).fadeIn(),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _navigateWithAnimation(BuildContext context, int targetPart) {
+    if (targetPart == _part!.partNumber) return;
+
+    // Slide transition to the next/prev part
+    final direction = targetPart > _part!.partNumber ? 1.0 : -1.0;
+    context.go('/story/${widget.storyId}/part/$targetPart');
   }
 
   static String _formatDate(DateTime date) {
