@@ -5,6 +5,7 @@ class AuthUser {
   final String? username;
   final String? displayName;
   final String? avatarUrl;
+  final String? coverUrl;
   final bool hasCompletedOnboarding;
 
   const AuthUser({
@@ -13,6 +14,7 @@ class AuthUser {
     this.username,
     this.displayName,
     this.avatarUrl,
+    this.coverUrl,
     required this.hasCompletedOnboarding,
   });
 
@@ -23,6 +25,7 @@ class AuthUser {
       username: json['username'] as String?,
       displayName: json['displayName'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
+      coverUrl: json['coverUrl'] as String?,
       hasCompletedOnboarding: json['hasCompletedOnboarding'] as bool? ?? false,
     );
   }
@@ -33,6 +36,7 @@ class AuthUser {
     'username': username,
     'displayName': displayName,
     'avatarUrl': avatarUrl,
+    'coverUrl': coverUrl,
     'hasCompletedOnboarding': hasCompletedOnboarding,
   };
 
@@ -42,6 +46,7 @@ class AuthUser {
     String? username,
     String? displayName,
     String? avatarUrl,
+    String? coverUrl,
     bool? hasCompletedOnboarding,
   }) {
     return AuthUser(
@@ -50,8 +55,8 @@ class AuthUser {
       username: username ?? this.username,
       displayName: displayName ?? this.displayName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
-      hasCompletedOnboarding:
-          hasCompletedOnboarding ?? this.hasCompletedOnboarding,
+      coverUrl: coverUrl ?? this.coverUrl,
+      hasCompletedOnboarding: hasCompletedOnboarding ?? this.hasCompletedOnboarding,
     );
   }
 }

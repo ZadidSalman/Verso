@@ -248,7 +248,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final coverUrl = await _repository.uploadCover(filePath);
       if (state is AuthAuthenticated) {
         final currentUser = (state as AuthAuthenticated).user;
-        state = AuthAuthenticated(currentUser.copyWith(avatarUrl: currentUser.avatarUrl));
+        state = AuthAuthenticated(currentUser.copyWith(coverUrl: coverUrl));
       }
       return true;
     } catch (e) {

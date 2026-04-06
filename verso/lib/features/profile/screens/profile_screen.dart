@@ -140,19 +140,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                     ),
-                    // Cover photo or placeholder
-                    if (user?.avatarUrl != null)
+                    // Tap area for cover upload
+                    if (isOwnProfile)
                       Positioned.fill(
                         child: GestureDetector(
-                          onTap: isOwnProfile ? _pickAndUploadCover : null,
-                          child: Container(
-                            color: Colors.transparent,
-                          ),
+                          onTap: _pickAndUploadCover,
+                          child: Container(color: Colors.transparent),
                         ),
-                      )
-                    else
-                      Container(
-                        color: AppColors.primary.withValues(alpha: 0.3),
                       ),
                     // Edit button for own profile
                     if (isOwnProfile)
