@@ -208,21 +208,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   }
                 }, childCount: feedState.items.length),
               ),
-            );
-
-            // Loading more indicator
-          if (feedState.isLoading && feedState.items.isNotEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  ),
-                ),
-              ),
             ),
         ],
       ),
