@@ -1,4 +1,6 @@
 /// Union type for all feed item types
+import 'poem_model.dart';
+
 enum FeedItemType { poem, story, thought }
 
 /// Unified feed item wrapper for poems, stories, and thoughts
