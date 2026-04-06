@@ -23,7 +23,7 @@ const router = Router();
 const imageUpload = multer({
   dest: 'uploads/',
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
