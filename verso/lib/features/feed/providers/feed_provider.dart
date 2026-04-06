@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/feed_repository.dart';
 import '../../../shared/models/poem_model.dart';
+import '../../../shared/models/feed_item_model.dart';
 
 /// Provider for FeedRepository
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
@@ -9,7 +10,7 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
 
 /// Feed state with cursor pagination
 class FeedState {
-  final List<PoemModel> items;
+  final List<FeedItem> items;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoading;
@@ -22,7 +23,7 @@ class FeedState {
   });
 
   FeedState copyWith({
-    List<PoemModel>? items,
+    List<FeedItem>? items,
     String? nextCursor,
     bool? hasMore,
     bool? isLoading,
@@ -46,7 +47,6 @@ class FeedNotifier extends Notifier<FeedState> {
 
   @override
   FeedState build() {
-    // Load initial feed
     Future.microtask(() => _loadFeed());
     return const FeedState(isLoading: true);
   }
@@ -64,9 +64,30 @@ class FeedNotifier extends Notifier<FeedState> {
         type: _currentType,
       );
 
+      // Convert poems to FeedItems and add dummy stories/thoughts
+      List<FeedItem> feedItems = response.items.map((p) => FeedItem.fromPoem(p)).toList();
+      
+      // Add dummy data for testing (stories and thoughts)
+      if (cursor == null && feedItems.isNotEmpty) {
+        // Insert dummy stories and thoughts into the feed
+        final List<FeedItem> allItems = [];
+        for (int i = 0; i < feedItems.length; i++) {
+          allItems.add(feedItems[i]);
+          // Add a thought after every 2 poems
+          if (i % 2 == 1 && i < 8) {
+            allItems.add(FeedItem.dummyThought(i ~/ 2));
+          }
+          // Add a story after every 3 poems
+          if (i % 3 == 2 && i < 9) {
+            allItems.add(FeedItem.dummyStory(i ~/ 3));
+          }
+        }
+        feedItems = allItems;
+      }
+
       final newItems = cursor == null
-          ? response.items
-          : [...state.items, ...response.items];
+          ? feedItems
+          : [...state.items, ...feedItems];
 
       state = FeedState(
         items: newItems,

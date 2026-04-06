@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/router/app_router.dart';
 import '../providers/feed_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
@@ -13,6 +14,8 @@ import '../../../shared/widgets/mood_filter_bar.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
 import '../../../shared/widgets/comment_sheet.dart';
 import '../../../shared/widgets/notification_bell.dart';
+import '../../../shared/models/feed_item_model.dart';
+import '../../../shared/models/poem_model.dart';
 import '../../poem/providers/engagement_provider.dart';
 import '../../thought/widgets/thought_composer_sheet.dart';
 
@@ -176,50 +179,38 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   if (index >= feedState.items.length) return null;
 
-                  final poem = feedState.items[index];
+                  final item = feedState.items[index];
                   final delay = Duration(
                     milliseconds: index < 8 ? index * 60 : 0,
                   );
 
-                  return PoemCard(
-                        key: ValueKey(poem.id),
-                        poem: poem,
-                        onTap: () =>
-                            context.push('${AppRoutes.poem}/${poem.id}'),
-                        onLike: () {
-                          toggleLike(ref, poem.id);
-                        },
-                        onComment: () {
-                          CommentSheet.show(
-                            context,
-                            poemId: poem.id,
-                            commentCount: poem.commentsCount,
-                          );
-                        },
-                        onShare: () {
-                          // TODO: Implement share
-                        },
-                      )
-                      .animate(delay: disableAnimations ? Duration.zero : delay)
-                      .fadeIn(
-                        duration: disableAnimations
-                            ? const Duration(milliseconds: 150)
-                            : AppDurations.emphasized,
-                        curve: AppCurves.decelerate,
-                      )
-                      .slideY(
-                        begin: 0.08,
-                        end: 0,
-                        duration: disableAnimations
-                            ? Duration.zero
-                            : AppDurations.emphasized,
-                        curve: AppCurves.sheetOpen,
-                      );
+                  // Render different cards based on item type
+                  if (item.type == FeedItemType.poem) {
+                    return PoemCard(
+                      key: ValueKey(item.id),
+                      poem: _createPoemModelFromFeedItem(item),
+                      onTap: () => context.push('${AppRoutes.poem}/${item.id}'),
+                      onLike: () => toggleLike(ref, item.id),
+                      onComment: () => CommentSheet.show(
+                        context,
+                        poemId: item.id,
+                        commentCount: item.commentsCount,
+                      ),
+                      onShare: () {},
+                    ).animate(delay: disableAnimations ? Duration.zero : delay).fadeIn(
+                      duration: disableAnimations ? const Duration(milliseconds: 150) : AppDurations.emphasized,
+                      curve: AppCurves.decelerate,
+                    );
+                  } else if (item.type == FeedItemType.story) {
+                    return _buildStoryCard(context, item, delay, disableAnimations);
+                  } else {
+                    return _buildThoughtCard(context, item, delay, disableAnimations);
+                  }
                 }, childCount: feedState.items.length),
               ),
-            ),
+            );
 
-          // Loading more indicator
+            // Loading more indicator
           if (feedState.isLoading && feedState.items.isNotEmpty)
             const SliverToBoxAdapter(
               child: Padding(
@@ -259,7 +250,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               context.push(AppRoutes.poemEditor);
               break;
             case 3:
-              // TODO: Messages - not implemented yet
+              context.push(AppRoutes.messages);
               break;
             case 4:
               context.push(AppRoutes.profile);
@@ -321,4 +312,225 @@ class _MoodFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_MoodFilterHeaderDelegate oldDelegate) => false;
+}
+
+/// Helper to create PoemModel from FeedItem for PoemCard
+PoemModel _createPoemModelFromFeedItem(FeedItem item) {
+  return PoemModel(
+    id: item.id,
+    authorId: item.authorId ?? '',
+    author: PoemAuthor(
+      displayName: item.authorName,
+      username: item.authorUsername,
+      avatarUrl: item.authorAvatar,
+    ),
+    title: item.title ?? '',
+    content: item.content,
+    slug: item.id,
+    language: item.language ?? 'en',
+    mood: item.mood,
+    tags: [],
+    status: 'published',
+    likesCount: item.likesCount,
+    commentsCount: item.commentsCount,
+    createdAt: item.createdAt,
+  );
+}
+
+/// Build story card widget
+Widget _buildStoryCard(BuildContext context, FeedItem item, Duration delay, bool disableAnimations) {
+  final theme = Theme.of(context);
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: AppShapes.radiusMd,
+      border: Border.all(color: AppColors.outlineVariant),
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppShapes.radiusMd,
+        onTap: () => context.push('/story/${item.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.surfaceVariant,
+                    backgroundImage: item.authorAvatar != null
+                        ? NetworkImage(item.authorAvatar!)
+                        : null,
+                    child: item.authorAvatar == null
+                        ? const Icon(Icons.person, size: 16, color: AppColors.onSurfaceVariant)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item.authorName ?? 'Anonymous',
+                      style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.tertiaryContainer,
+                      borderRadius: AppShapes.radiusXs,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.auto_stories, size: 12, color: AppColors.tertiary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Story',
+                          style: theme.textTheme.labelSmall?.copyWith(color: AppColors.tertiary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                item.title ?? 'Untitled Story',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.content ?? '',
+                style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.favorite_outline, size: 16, color: AppColors.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('${item.likesCount}', style: theme.textTheme.labelSmall),
+                  const SizedBox(width: 16),
+                  Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('${item.commentsCount}', style: theme.textTheme.labelSmall),
+                  const Spacer(),
+                  Text('${item.partsCount} parts', style: theme.textTheme.labelSmall?.copyWith(color: AppColors.tertiary)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ).animate(delay: disableAnimations ? Duration.zero : delay).fadeIn(
+    duration: disableAnimations ? const Duration(milliseconds: 150) : AppDurations.emphasized,
+    curve: AppCurves.decelerate,
+  );
+}
+
+/// Build thought card widget
+Widget _buildThoughtCard(BuildContext context, FeedItem item, Duration delay, bool disableAnimations) {
+  final theme = Theme.of(context);
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: AppShapes.radiusMd,
+      border: Border.all(color: AppColors.primaryContainer.withValues(alpha: 0.5)),
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: AppShapes.radiusMd,
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppColors.surfaceVariant,
+                    backgroundImage: item.authorAvatar != null
+                        ? NetworkImage(item.authorAvatar!)
+                        : null,
+                    child: item.authorAvatar == null
+                        ? const Icon(Icons.person, size: 16, color: AppColors.onSurfaceVariant)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item.authorName ?? 'Anonymous',
+                      style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  if (item.visibility != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: item.visibility == 'public'
+                            ? AppColors.primaryContainer
+                            : (item.visibility == 'mutual'
+                                ? AppColors.secondaryContainer
+                                : AppColors.surfaceVariant),
+                        borderRadius: AppShapes.radiusXs,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            item.visibility == 'public'
+                                ? Icons.public
+                                : (item.visibility == 'mutual' ? Icons.group : Icons.lock_outline),
+                            size: 10,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.visibility == 'public'
+                                ? 'Public'
+                                : (item.visibility == 'mutual' ? 'Mutual' : 'Private'),
+                            style: theme.textTheme.labelSmall?.copyWith(fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                item.content ?? '',
+                style: AppTypography.englishPoem.copyWith(fontSize: 16, height: 1.5),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.favorite_outline, size: 16, color: AppColors.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('${item.likesCount}', style: theme.textTheme.labelSmall),
+                  const SizedBox(width: 16),
+                  Icon(Icons.chat_bubble_outline, size: 16, color: AppColors.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Text('${item.commentsCount}', style: theme.textTheme.labelSmall),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ).animate(delay: disableAnimations ? Duration.zero : delay).fadeIn(
+    duration: disableAnimations ? const Duration(milliseconds: 150) : AppDurations.emphasized,
+    curve: AppCurves.decelerate,
+  );
 }
