@@ -33,10 +33,6 @@ jobs:
         working-directory: verso
         run: flutter pub get
 
-      - name: Run codegen
-        working-directory: verso
-        run: dart run build_runner build --delete-conflicting-outputs
-
       - name: Build release APK
         working-directory: verso
         run: |
