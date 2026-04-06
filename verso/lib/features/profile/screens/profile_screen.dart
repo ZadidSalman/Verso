@@ -95,6 +95,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                     ),
+                    // Profile avatar overlapping cover (like FB/LinkedIn)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Transform.translate(
+                          offset: const Offset(0, 40),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.background,
+                                width: 4,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundColor: AppColors.surfaceVariant,
+                              backgroundImage: user?.avatarUrl != null
+                                  ? NetworkImage(user!.avatarUrl!)
+                                  : null,
+                              child: user?.avatarUrl == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: AppColors.onSurfaceVariant,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     // Edit button for own profile
                     if (isOwnProfile)
                       Positioned(
@@ -115,68 +149,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
 
-            // User info section
+            // User info section (reduced top margin since avatar overlaps)
             SliverToBoxAdapter(
-              child: Transform.translate(
-                offset: const Offset(0, -40),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    children: [
-                      // Avatar
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppColors.surface,
-                        child: CircleAvatar(
-                          radius: 37,
-                          backgroundColor: AppColors.surfaceVariant,
-                          backgroundImage: user?.avatarUrl != null
-                              ? NetworkImage(user!.avatarUrl!)
-                              : null,
-                          child: user?.avatarUrl == null
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: AppColors.onSurfaceVariant,
-                                )
-                              : null,
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 30, 24, 16),
+                child: Column(
+                  children: [
+                    // Name
+                    Text(
+                      user?.displayName ?? user?.username ?? 'Poet',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 12),
-                      // Name
+                    ),
+                    if (user?.username != null)
                       Text(
-                        user?.displayName ?? user?.username ?? 'Poet',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        '@${user!.username}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.onSurfaceVariant,
                         ),
                       ),
-                      if (user?.username != null)
-                        Text(
-                          '@${user!.username}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      // Bio placeholder
-                      Text(
-                        'Writing poetry to express my thoughts and feelings.',
-                        style: theme.textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 16),
-                      // Stats row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _StatColumn(label: 'Poems', count: '12'),
-                          _StatColumn(label: 'Followers', count: '234'),
-                          _StatColumn(label: 'Following', count: '89'),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    // Bio placeholder
+                    Text(
+                      'Writing poetry to express my thoughts and feelings.',
+                      style: theme.textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 16),
+                    // Stats row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _StatColumn(label: 'Poems', count: '12'),
+                        _StatColumn(label: 'Followers', count: '234'),
+                        _StatColumn(label: 'Following', count: '89'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                       // Action buttons
                       if (!isOwnProfile)
                         Row(
