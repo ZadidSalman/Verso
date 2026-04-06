@@ -267,8 +267,14 @@ class _CommentSheetState extends ConsumerState<CommentSheet> {
 /// Individual comment tile
 class _CommentTile extends StatelessWidget {
   final dynamic comment;
+  final Duration delay;
+  final bool disableAnimations;
 
-  const _CommentTile({required this.comment});
+  const _CommentTile({
+    required this.comment,
+    this.delay = Duration.zero,
+    this.disableAnimations = false,
+  });
 
   @override
   Widget build(BuildContext context) {

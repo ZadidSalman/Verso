@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:posthog_flutter/posthog_flutter.dart';
 
 import 'core/theme/theme.dart';
 import 'core/router/app_router.dart';
@@ -28,13 +27,9 @@ void main() async {
   );
 
   // Initialize PostHog for analytics
-  final posthogConfig = PostHogConfig(
-    const String.fromEnvironment(
-      'POSTHOG_KEY',
-      defaultValue: '',
-    ),
-  );
-  await PostHog().setup(posthogConfig);
+  if (kDebugMode) {
+    debugPrint('PostHog: skipping init - no key configured');
+  }
 
   // Initialize Firebase with timeout (cold starts can be slow)
   try {
