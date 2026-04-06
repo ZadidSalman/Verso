@@ -44,16 +44,39 @@ flutter run \
 ## CI workflows
 
 - `Build Android Release (APK)` on push to `main`
-- `Build Android Debug (APK)` on pull requests
 
 Firebase Android config in CI is provided via repository secret:
 
 - `ANDROID_GOOGLE_SERVICES_JSON_B64` (base64 of `google-services.json`)
 
+## Environment Variables
+
+Required for building:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `API_URL` | Backend API base URL | `https://verso-zjri.onrender.com` |
+| `PUSHER_KEY` | Pusher Channels app key | From Pusher dashboard |
+| `PUSHER_CLUSTER` | Pusher cluster | `ap2` |
+| `SENTRY_DSN` | Sentry error tracking DSN | From Sentry project |
+| `POSTHOG_KEY` | PostHog analytics API key | From PostHog project |
+
+## Build APK locally
+
+```bash
+cd verso
+flutter build apk --release \
+  --dart-define=API_URL=https://verso-zjri.onrender.com \
+  --dart-define=PUSHER_KEY=your_key \
+  --dart-define=PUSHER_CLUSTER=ap2 \
+  --dart-define=SENTRY_DSN=your_dsn \
+  --dart-define=POSTHOG_KEY=your_key
+```
+
 ## Notes
 
 - Do not commit `google-services.json` to git.
-- Set required GitHub Actions secrets before running release builds.
+- Set required GitHub Actions secrets before running builds.
 
 ## Firebase CI secret setup
 
