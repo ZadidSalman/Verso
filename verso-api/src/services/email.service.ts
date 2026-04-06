@@ -1,21 +1,7 @@
-import { BrevoClient } from '@getbrevo/brevo';
+import axios from 'axios';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BREVO CLIENT SETUP
-// ─────────────────────────────────────────────────────────────────────────────
-
-const brevoClient = new BrevoClient({
-  apiKey: process.env.BREVO_API_KEY!,
-});
-
-const sender = {
-  email: process.env.BREVO_SENDER_EMAIL || 'zadidsalman@gmail.com',
-  name: process.env.BREVO_SENDER_NAME || 'Verso',
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// EMAIL TEMPLATES (Sage & Vellum Design)
-// ─────────────────────────────────────────────────────────────────────────────
+const FROM_EMAIL = process.env.FROM_EMAIL ?? 'hello@verso.app';
+const FROM_NAME = 'Verso';
 
 const baseStyles = `
   body { 
@@ -102,9 +88,23 @@ function wrapTemplate(content: string): string {
   `;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EMAIL FUNCTIONS
-// ─────────────────────────────────────────────────────────────────────────────
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  await axios.post(
+    'https://api.brevo.com/v3/smtp/email',
+    {
+      sender: { email: FROM_EMAIL, name: FROM_NAME },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    },
+    {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+}
 
 /**
  * Send OTP verification email
@@ -118,18 +118,8 @@ export async function sendOtpEmail(to: string, otp: string): Promise<void> {
     <p>If you didn't create a Verso account, you can safely ignore this email.</p>
   `);
 
-  try {
-    await brevoClient.transactionalEmails.sendTransacEmail({
-      sender,
-      to: [{ email: to }],
-      subject: 'Your Verso verification code',
-      htmlContent: html,
-    });
-    console.log(`OTP email sent to ${to}`);
-  } catch (error) {
-    console.error('Failed to send OTP email:', error);
-    throw error;
-  }
+  await sendEmail(to, 'Your Verso verification code', html);
+  console.log(`OTP email sent to ${to}`);
 }
 
 /**
@@ -144,18 +134,8 @@ export async function sendPasswordResetOtp(to: string, otp: string): Promise<voi
     <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
   `);
 
-  try {
-    await brevoClient.transactionalEmails.sendTransacEmail({
-      sender,
-      to: [{ email: to }],
-      subject: 'Reset your Verso password',
-      htmlContent: html,
-    });
-    console.log(`Password reset email sent to ${to}`);
-  } catch (error) {
-    console.error('Failed to send password reset email:', error);
-    throw error;
-  }
+  await sendEmail(to, 'Reset your Verso password', html);
+  console.log(`Password reset email sent to ${to}`);
 }
 
 /**
@@ -173,16 +153,10 @@ export async function sendWelcomeEmail(to: string, displayName: string): Promise
   `);
 
   try {
-    await brevoClient.transactionalEmails.sendTransacEmail({
-      sender,
-      to: [{ email: to }],
-      subject: 'Your first page is blank.',
-      htmlContent: html,
-    });
+    await sendEmail(to, 'Your first page is blank.', html);
     console.log(`Welcome email sent to ${to}`);
   } catch (error) {
     console.error('Failed to send welcome email:', error);
-    // Don't throw - welcome email is non-critical
   }
 }
 
@@ -225,16 +199,6 @@ export async function sendWeeklyDigest(
     </p>
   `);
 
-  try {
-    await brevoClient.transactionalEmails.sendTransacEmail({
-      sender,
-      to: [{ email: to }],
-      subject: "This week's poems are waiting for you.",
-      htmlContent: html,
-    });
-    console.log(`Weekly digest sent to ${to}`);
-  } catch (error) {
-    console.error('Failed to send weekly digest:', error);
-    throw error;
-  }
+  await sendEmail(to, "This week's poems are waiting for you.", html);
+  console.log(`Weekly digest sent to ${to}`);
 }
