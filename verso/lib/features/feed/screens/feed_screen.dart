@@ -66,7 +66,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.quote_outlined, color: AppColors.primary),
+                Icon(Icons.edit_note, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Verso',
@@ -164,20 +164,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     milliseconds: index < 8 ? index * 60 : 0,
                   );
 
-                  return PoemCard(
-                    key: ValueKey(poem.id),
-                    poem: poem,
-                    onTap: () => context.push('${AppRoutes.poem}/${poem.id}'),
-                    onLike: () => toggleLike(ref, poem.id),
-                    onComment: () => CommentSheet.show(
-                      context,
-                      poemId: poem.id,
-                      commentCount: poem.commentsCount,
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: PoemCard(
+                      key: ValueKey(poem.id),
+                      poem: poem,
+                      onTap: () => context.push('${AppRoutes.poem}/${poem.id}'),
+                      onLike: () => toggleLike(ref, poem.id),
+                      onComment: () => CommentSheet.show(
+                        context,
+                        poemId: poem.id,
+                        commentCount: poem.commentsCount,
+                      ),
+                      onShare: () {},
                     ),
-                    onShare: () {},
-                  ).animate(delay: disableAnimations ? Duration.zero : delay).fadeIn(
-                    duration: disableAnimations ? const Duration(milliseconds: 150) : AppDurations.emphasized,
-                    curve: AppCurves.decelerate,
                   );
                 }, childCount: feedState.items.length),
               ),

@@ -130,17 +130,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
                     ),
                     // Edit button for own profile
-                    if (isOwnProfile)
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 8,
-                        right: 12,
-                        child: IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: () {},
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.surface.withValues(
-                              alpha: 0.8,
+                          if (isOwnProfile) ...[
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(Icons.share_outlined),
+                              style: IconButton.styleFrom(
+                                backgroundColor: AppColors.surfaceVariant,
+                              ),
                             ),
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(Icons.more_horiz),
+                              style: IconButton.styleFrom(
+                                backgroundColor: AppColors.surfaceVariant,
+                              ),
+                            ),
+                          ] else ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {},
+                                style: OutlinedButton.styleFrom(
+                                  shape: AppShapes.sm,
+                                ),
+                                child: const Text('Edit Profile'),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(Icons.share_outlined),
+                              style: IconButton.styleFrom(
+                                backgroundColor: AppColors.surfaceVariant,
+                              ),
+                            ),
+                          ],
                           ),
                         ),
                       ),
