@@ -14,6 +14,7 @@ import { User } from './models/User.model';
 import { Poem } from './models/Poem.model';
 import { Story } from './models/Story.model';
 import { StoryPart } from './models/StoryPart.model';
+import { Thought } from './models/Thought.model';
 import { Follow } from './models/Follow.model';
 import { Like } from './models/Like.model';
 import { Comment } from './models/Comment.model';
@@ -41,6 +42,7 @@ async function seed() {
     Poem.deleteMany({}),
     Story.deleteMany({}),
     StoryPart.deleteMany({}),
+    Thought.deleteMany({}),
     Follow.deleteMany({}),
     Like.deleteMany({}),
     Comment.deleteMany({}),
@@ -296,56 +298,240 @@ async function seed() {
   console.log(`   Created ${poems.length} poems.`);
 
   // ── STORIES ──────────────────────────────────────────────────────────────
-  console.log('📖 Creating stories...');
-  const story = await Story.create({
-    authorId: riya._id,
-    title: 'The Last Monsoon',
-    description: 'A story about the last rainy season before everything changed.',
-    language: 'en',
-    mood: ['melancholy', 'hope'],
-    genre: 'literary-fiction',
-    storyMode: 'linear',
-    collabMode: 'none',
-    status: 'ongoing',
-    partsCount: 2,
-    followersCount: 5,
-    totalReads: 120,
-    trendingScore: 7.8,
-    publishedAt: new Date(Date.now() - 86400000 * 10),
-    lastPartAt: new Date(Date.now() - 86400000 * 1),
-  });
+  console.log('📖 Creating stories with 5-9 parts each...');
 
-  await StoryPart.insertMany([
+  const storiesData = [
     {
-      storyId: story._id,
-      authorId: riya._id,
-      partNumber: 1,
-      title: 'The Gathering Clouds',
-      content: `The sky had been grey for three weeks straight. Not the gentle grey of winter mornings, but a heavy, oppressive grey that pressed against the windows like a living thing.\n\nAmara stood on the balcony and watched the first drops fall. They hit the concrete with a sound like tiny fists knocking.`,
-      language: 'en',
-      mood: ['melancholy'],
-      status: 'published',
-      likesCount: 8,
-      commentsCount: 2,
-      readsCount: 67,
-      publishedAt: new Date(Date.now() - 86400000 * 10),
-    },
-    {
-      storyId: story._id,
-      authorId: riya._id,
-      partNumber: 2,
-      title: 'What the Rain Carried',
-      content: `By the second week, the streets had become rivers. Not the romantic kind you see in films — these were brown, churning things that carried away everything people had tried to hold onto.\n\nAmara watched a child's shoe float past her door. Just one shoe. She wondered about the other.`,
+      author: riya,
+      title: 'The Last Monsoon',
+      description: 'A story about the last rainy season before everything changed.',
       language: 'en',
       mood: ['melancholy', 'hope'],
-      status: 'published',
-      likesCount: 5,
-      commentsCount: 1,
-      readsCount: 43,
-      publishedAt: new Date(Date.now() - 86400000 * 1),
+      genre: 'literary-fiction',
+      parts: [
+        { title: 'The Gathering Clouds', content: 'The sky had been grey for three weeks straight. Not the gentle grey of winter mornings, but a heavy, oppressive grey that pressed against the windows like a living thing.\n\nAmara stood on the balcony and watched the first drops fall. They hit the concrete with a sound like tiny fists knocking.' },
+        { title: 'What the Rain Carried', content: 'By the second week, the streets had become rivers. Not the romantic kind you see in films — these were brown, churning things that carried away everything people had tried to hold onto.\n\nAmara watched a child\'s shoe float past her door.' },
+        { title: 'The Flood', content: 'The water rose slowly, almost politely, as if it was asking permission to enter. But it didn\'t wait for an answer.\n\nAmara moved everything she owned to the second floor.' },
+        { title: 'What Was Lost', content: 'When the water finally receded, it left behind a layer of mud and memories. Some things could be cleaned. Others could not.' },
+        { title: 'After the Storm', content: 'The sun returned on a Tuesday. By then, Amara had forgotten what dry clothes felt like.' },
+      ]
     },
-  ]);
-  console.log(`   Created 1 story with 2 parts.`);
+    {
+      author: arjun,
+      title: 'Neon Nights',
+      description: 'A city that never sleeps, a soul that forgot how.',
+      language: 'en',
+      mood: ['urban', 'loneliness'],
+      genre: 'contemporary',
+      parts: [
+        { title: 'The 3AM Diner', content: 'The coffee was cold but the waitress smiled like she meant it. That was enough for now.' },
+        { title: 'Last Train', content: 'The metro doors closed between us. She waved. I didn\'t.' },
+        { title: 'Rooftop Views', content: 'From here, the city looked like a circuit board. All lights, no connections.' },
+        { title: 'Taxi Fare', content: 'The driver didn\'t ask questions. He just drove in circles while I counted streetlights.' },
+        { title: '3AM Calls', content: 'She called at 3AM. I answered at 3AM. Some things are timed by the universe.' },
+        { title: 'Dawn Patrol', content: 'The first jogger passed at 5:30. By then, I had already been awake for 24 hours.' },
+      ]
+    },
+    {
+      author: nadia,
+      title: 'ঢাকার গল্প',
+      description: 'Dhaka through different eyes.',
+      language: 'bn',
+      mood: ['nostalgia', 'home'],
+      genre: 'memoir',
+      parts: [
+        { title: 'লালবাগের দুপুর', content: 'রিকশার ঘণ্টি, মাছ ভাজার গন্ধ, আর মাকে ডাকতে গিয়ে হারিয়ে যাওয়া।' },
+        { title: 'বইয়ের দোকান', content: 'নতুন বইয়ের গন্ধ আর পুরনো বন্ধুর মুখ — দুটোই অপেক্ষা করত।' },
+        { title: 'বৃষ্টির দিন', content: 'ছাতা উল্টে যায়, জুতা ভিজে যায়, কিন্তু বৃষ্টি থামে না।' },
+        { title: 'বন্ধু', content: 'যে বন্ধু সব বলত, যে বন্ধু কিছুই বলত না — দুজনেই দরকার ছিল।' },
+        { title: 'ফেরা', content: 'যেখান থেকে এসেছি, সেখানে ফিরে যাওয়ার সময় এলো।' },
+        { title: 'স্মৃতি', content: 'মনে পড়ে সব, কিন্তু কথা আর আসে না।' },
+      ]
+    },
+    {
+      author: riya,
+      title: 'The Letter Never Sent',
+      description: 'Words that waited too long.',
+      language: 'en',
+      mood: ['longing', 'loss'],
+      genre: 'epistolary',
+      parts: [
+        { title: 'Dear You,', content: 'I started this letter a hundred times. Each time, the words rearranged themselves into something else entirely.' },
+        { title: 'The First Draft', content: 'Dear You,\n\nI hope this finds you well. That seems like a strange thing to write to someone who was once my entire weather system.' },
+        { title: 'The Second Draft', content: 'The paper is soft from folding and unfolding. Each crease tells a story of words I couldn\'t say.' },
+        { title: 'The Third Draft', content: 'Remember when we used to watch the sunset from your fire escape? I still watch sunsets. Just not from there.' },
+        { title: 'The Final Draft', content: 'Sometimes I think about sending it. Then I remember some letters are better unsent. Some words are better left to the wind.' },
+      ]
+    },
+    {
+      author: arjun,
+      title: 'Coffee Shop Confessions',
+      description: 'Four walls, a thousand stories.',
+      language: 'en',
+      mood: ['wonder', 'observation'],
+      genre: 'slice-of-life',
+      parts: [
+        { title: 'The Regular', content: 'He orders the same black coffee every morning at 7:15. Today he ordered two. I didn\'t ask why.' },
+        { title: 'First Date', content: 'They laughed too loud, spoke too fast, and spilled coffee twice. By the end, they were holding hands.' },
+        { title: 'The Writer', content: 'She comes here to write. Her笔记本 is always open, her coffee always cold. She never looks up.' },
+        { title: 'The Closure', content: 'Two people sat at the corner table. One cried, one handed tissues. Some endings look like beginnings.' },
+        { title: 'The Night Shift', content: 'The coffee shop becomes a different place after 10PM. Quieter. More honest.' },
+        { title: 'The Last Cup', content: 'She came in one last time before leaving the city. "Surprise me," she said. So I did.' },
+      ]
+    },
+    {
+      author: nadia,
+      title: 'Monsoon in Dhaka',
+      description: 'When the sky breaks, the city remembers.',
+      language: 'bn',
+      mood: ['melancholy', 'hope'],
+      genre: 'literary-fiction',
+      parts: [
+        { title: 'প্রথম বৃষ্টি', content: 'প্রথম বৃষ্টির জল পড়লে মনে হয় পুরো শহর নতুন জীবন পায়।' },
+        { title: 'রিকশার চাকা', content: 'রিকশার চাকা বৃষ্টির জলে ডুবে যায়, কিন্তু চলতে থাকে।' },
+        { title: 'ছাদের আশ্রয়', content: 'ছাদে দাঁড়িয়ে দেখি পুরো শহর ভেসে যাচ্ছে। কিন্তু আমরা ডুবি না।' },
+        { title: 'পানি কমলে', content: 'পানি কমলে কাদা রইল। কাদার নিচে স্মৃতি। কাদার নিচে গল্প।' },
+        { title: 'নতুন সকাল', content: 'সকাল হলো। শহর নতুন করে শুরু হলো। আমরাও।' },
+      ]
+    },
+    {
+      author: riya,
+      title: 'The Garden at Midnight',
+      description: 'Flowers that only bloom when no one is watching.',
+      language: 'en',
+      mood: ['wonder', 'magic'],
+      genre: 'fantasy',
+      parts: [
+        { title: 'The Key', content: 'The garden gate is locked. But there\'s a key hidden where the moonflowers grow.' },
+        { title: 'Night Bloom', content: 'At midnight, the impossible happens. Flowers open that have no names, colors that have no descriptions.' },
+        { title: 'The Keeper', content: 'She\'s been here longer than the garden itself. She remembers when the first seed was planted.' },
+        { title: 'What the Flowers Say', content: 'They speak in a language of fragrance and rustling leaves. If you listen, they tell you everything.' },
+        { title: 'The Trade', content: '"Give us your saddest memory," the flowers whisper, "and we\'ll give you a night you\'ll never forget."' },
+        { title: 'Morning After', content: 'When dawn breaks, the garden is ordinary again. But you remember. You always remember.' },
+        { title: 'The Invitation', content: 'She leaves a single nightflower on your pillow. An invitation. A promise.' },
+      ]
+    },
+    {
+      author: arjun,
+      title: 'Train to Nowhere',
+      description: 'A journey that changed direction.',
+      language: 'en',
+      mood: ['adventure', 'discovery'],
+      genre: 'travel',
+      parts: [
+        { title: 'Platform 9', content: 'The train was supposed to go to Delhi. I got on anyway.' },
+        { title: 'The Unexpected Stop', content: 'It stopped at a station that wasn\'t on any map. A voice said, "Those who get off here have forgotten why they started."' },
+        { title: 'The Village', content: 'The village had no name. Just houses, and people who looked like they had forgotten how to hurry.' },
+        { title: 'The Elder', content: 'An old woman offered me tea. "You\'re looking for something," she said. "It\'s not in Delhi."' },
+        { title: 'The Lesson', content: 'I stayed for a week. I learned that sometimes the destination is the journey, and the journey is the destination.' },
+        { title: 'The Return', content: 'The same train came back. But I was different. And that made all the difference.' },
+      ]
+    },
+    {
+      author: nadia,
+      title: 'Kitchen Stories',
+      description: 'Recipes of love, loss, and finding home.',
+      language: 'bn',
+      mood: ['nostalgia', 'family'],
+      genre: 'memoir',
+      parts: [
+        { title: 'চুলার পাশে', content: 'চুলার পাশে দাঁড়িয়ে রান্না শিখেছি। এই শিখনটাই আমার সবচেয়ে বড় শিক্ষা।' },
+        { title: 'রেসিপি', content: 'মা বলতেন, "রেসিপি মনে রাখতে হবে না, স্বাদ মনে রাখতে হবে।"' },
+        { title: 'একা রান্না', content: 'একা রান্না করতে গিয়ে কাঁদতে হয়। কিন্তু খেতে গিয়ে হাসতেও হয়।' },
+        { title: 'খাবার স্মৃতি', content: 'একটা খাবারের গন্ধেই সব কিছু ফিরে আসে। সময়, মানুষ, স্থান।' },
+        { title: 'হাতের স্পর্শ', content: 'বাবার হাতের ছোঁয়া, মার হাতের ছোঁয়া — এই দুটো স্পর্শ আলাদা করা যায় না।' },
+        { title: 'নতুন প্রজন্ম', content: 'এখন আমি রান্না করি। আমার মেয়েও শিখছে। এভাবেই চলে যায় সব।' },
+      ]
+    },
+    {
+      author: riya,
+      title: 'The Last Book',
+      description: 'When words fail, silence speaks.',
+      language: 'en',
+      mood: ['contemplation', 'wisdom'],
+      genre: 'philosophical',
+      parts: [
+        { title: 'The Last Page', content: 'She closed the book for the last time. The last page was blank, but she smiled anyway.' },
+        { title: 'The Author', content: 'He wrote one book. Then spent the rest of his life living it.' },
+        { title: 'The Reader', content: 'Some books are read once. Some books are read a hundred times. Some are never finished.' },
+        { title: 'The Annotation', content: 'In the margins, someone had written: "This is where I found myself."' },
+        { title: 'The Dedication', content: 'The book was dedicated "To those who never finished reading their own stories."' },
+        { title: 'The Ending', content: 'There was no period at the end. Just a long pause, waiting for the reader to continue.' },
+        { title: 'The Afterword', content: 'The afterword said: "This book is not the end. It\'s where the real story begins."' },
+        { title: 'The Re-read', content: 'Years later, she read it again. The words were the same. But she was different.' },
+      ]
+    },
+  ];
+
+  // Create all stories with their parts
+  let totalParts = 0;
+  for (const storyData of storiesData) {
+    const story = await Story.create({
+      authorId: storyData.author._id,
+      title: storyData.title,
+      description: storyData.description,
+      language: storyData.language,
+      mood: storyData.mood,
+      genre: storyData.genre,
+      storyMode: 'linear',
+      collabMode: 'none',
+      status: storyData.parts.length > 6 ? 'ongoing' : 'completed',
+      partsCount: storyData.parts.length,
+      followersCount: Math.floor(Math.random() * 10) + 1,
+      totalReads: Math.floor(Math.random() * 200) + 50,
+      trendingScore: Math.random() * 5 + 5,
+      publishedAt: new Date(Date.now() - 86400000 * (storiesData.indexOf(storyData) + 1)),
+      lastPartAt: new Date(Date.now() - 86400000),
+    });
+
+    const parts = storyData.parts.map((part, index) => ({
+      storyId: story._id,
+      authorId: storyData.author._id,
+      partNumber: index + 1,
+      title: part.title,
+      content: part.content,
+      language: storyData.language,
+      mood: storyData.mood,
+      status: 'published',
+      likesCount: Math.floor(Math.random() * 15) + 1,
+      commentsCount: Math.floor(Math.random() * 5),
+      readsCount: Math.floor(Math.random() * 100) + 20,
+      publishedAt: new Date(Date.now() - 86400000 * (storyData.parts.length - index)),
+    }));
+
+    await StoryPart.insertMany(parts);
+    totalParts += parts.length;
+  }
+  console.log(`   Created ${storiesData.length} stories with ${totalParts} parts.`);
+
+  // ── THOUGHTS ──────────────────────────────────────────────────────────────
+  console.log('💭 Creating thoughts...');
+  const thoughtsData = [
+    { author: riya, content: 'Sometimes the most profound poems are the ones we never write.', visibility: 'public', likesCount: 12 },
+    { author: riya, content: 'The rain doesn\'t ask permission to fall. Neither should your words.', visibility: 'public', likesCount: 8 },
+    { author: arjun, content: 'Silence is not empty. It\'s full of answers we\'re not ready to hear.', visibility: 'public', likesCount: 15 },
+    { author: arjun, content: 'We read the same sky but see different stars.', visibility: 'mutual', likesCount: 6 },
+    { author: nadia, content: 'কবিতা লিখতে গিয়ে কখনো কখনো মনে হয়, কলমটাই আমাকে লিখছে।', visibility: 'public', likesCount: 20 },
+    { author: nadia, content: 'শব্দ নয়, নীরবতাই সবচেয়ে বড় কবিতা।', visibility: 'public', likesCount: 18 },
+    { author: testPoet, content: 'Is it still a draft if it\'s the truest thing I\'ve ever written?', visibility: 'public', likesCount: 5 },
+    { author: testPoet, content: 'Today I wrote a poem. It rhymed. I\'m not sure if that\'s good or bad.', visibility: 'public', likesCount: 3 },
+    { author: riya, content: 'The best lines are the ones we cross out.', visibility: 'public', likesCount: 10 },
+    { author: arjun, content: 'Every city has a poem. You just have to listen for it.', visibility: 'public', likesCount: 7 },
+    { author: nadia, content: 'ভাষা হারালেও অনুভূতি হারায় না।', visibility: 'private', likesCount: 2 },
+    { author: riya, content: 'Not all who wander are lost. Some are just looking for the right metaphor.', visibility: 'public', likesCount: 9 },
+    { author: arjun, content: 'The blank page is not empty. It\'s waiting for courage.', visibility: 'public', likesCount: 11 },
+    { author: testPoet, content: 'I wrote a poem about clouds. Then it rained. Coincidence?', visibility: 'mutual', likesCount: 4 },
+    { author: nadia, content: 'সাদা কাগজে কালো কলম। এটাই সবচেয়ে সত্যিকারের ছবি।', visibility: 'public', likesCount: 14 },
+  ];
+
+  const thoughts = await Thought.insertMany(thoughtsData.map(t => ({
+    authorId: t.author._id,
+    content: t.content,
+    visibility: t.visibility,
+    likesCount: t.likesCount,
+    createdAt: new Date(Date.now() - 86400000 * (thoughtsData.indexOf(t) + 1)),
+  })));
+  console.log(`   Created ${thoughts.length} thoughts.`);
 
   // ── FOLLOWS ──────────────────────────────────────────────────────────────
   console.log('🤝 Creating follows...');
@@ -480,6 +666,7 @@ async function seed() {
   console.log(`   Poems:    ${await Poem.countDocuments()}`);
   console.log(`   Stories:  ${await Story.countDocuments()}`);
   console.log(`   Parts:    ${await StoryPart.countDocuments()}`);
+  console.log(`   Thoughts: ${await Thought.countDocuments()}`);
   console.log(`   Follows:  ${await Follow.countDocuments()}`);
   console.log(`   Likes:    ${await Like.countDocuments()}`);
   console.log(`   Comments: ${await Comment.countDocuments()}`);
