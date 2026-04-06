@@ -40,7 +40,6 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
   bool _isSaved = false;
   int _likesCount = 0;
   int _savesCount = 0;
-  int _commentsCount = 0;
 
   late AnimationController _heartController;
   late AnimationController _saveController;
@@ -85,12 +84,18 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
     toggleLike(ref, widget.poemId);
   }
 
-  void _openComments() {
-    CommentSheet.show(
-      context,
-      poemId: widget.poemId,
-      commentCount: _commentsCount,
-    );
+  void _openComments() async {
+    // Get comment count from provider
+    final commentsAsync = await ref.read(commentListProvider(widget.poemId).future);
+    final commentCount = commentsAsync.length;
+    
+    if (mounted) {
+      CommentSheet.show(
+        context,
+        poemId: widget.poemId,
+        commentCount: commentCount,
+      );
+    }
   }
 
   void _toggleSave() {
@@ -161,7 +166,7 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
       ),
       bottomNavigationBar: _ReactionBar(
         likesCount: _likesCount,
-        commentsCount: 0,
+        commentsCount: _commentsCount,
         savesCount: _savesCount,
         isLiked: _isLiked,
         isSaved: _isSaved,
