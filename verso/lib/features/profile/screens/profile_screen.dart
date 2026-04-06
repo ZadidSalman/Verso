@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shapes.dart';
@@ -24,11 +25,55 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 500,
+      maxHeight: 500,
+      imageQuality: 80,
+    );
+    if (image != null && mounted) {
+      setState(() => _isUploading = true);
+      final success = await ref.read(authProvider.notifier).uploadAvatar(image.path);
+      if (mounted) {
+        setState(() => _isUploading = false);
+        if (!success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload avatar')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadCover() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 400,
+      imageQuality: 80,
+    );
+    if (image != null && mounted) {
+      setState(() => _isUploading = true);
+      final success = await ref.read(authProvider.notifier).uploadCover(image.path);
+      if (mounted) {
+        setState(() => _isUploading = false);
+        if (!success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload cover')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -95,21 +140,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                     ),
+                    // Cover photo or placeholder
+                    if (user?.avatarUrl != null)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: isOwnProfile ? _pickAndUploadCover : null,
+                          child: Container(
+                            color: Colors.transparent,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
                     // Edit button for own profile
                     if (isOwnProfile)
                       Positioned(
                         top: MediaQuery.of(context).padding.top + 8,
                         right: 12,
-                        child: IconButton(
+                        child: PopupMenuButton<String>(
                           icon: const Icon(Icons.edit_outlined),
-                          onPressed: () {},
                           style: IconButton.styleFrom(
                             backgroundColor: AppColors.surface.withValues(
                               alpha: 0.8,
                             ),
                           ),
-                        ),
-                      ),
+                          onSelected: (value) {
+                            if (value == 'avatar') {
+                              _pickAndUploadAvatar();
+                            } else if (value == 'cover') {
+                              _pickAndUploadCover();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'avatar',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.person),
+                                  SizedBox(width: 8),
+                                  Text('Change Avatar'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'cover',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.photo_camera),
+                                  SizedBox(width: 8),
+                                  Text('Change Cover'),
+                                ],
+                              ),
+                    ),
                   ],
                 ),
               ),
@@ -124,22 +208,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   child: Column(
                     children: [
                       // Avatar
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppColors.surface,
-                        child: CircleAvatar(
-                          radius: 37,
-                          backgroundColor: AppColors.surfaceVariant,
-                          backgroundImage: user?.avatarUrl != null
-                              ? NetworkImage(user!.avatarUrl!)
-                              : null,
-                          child: user?.avatarUrl == null
-                              ? const Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: AppColors.onSurfaceVariant,
-                                )
-                              : null,
+                      GestureDetector(
+                        onTap: isOwnProfile ? _pickAndUploadAvatar : null,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 40,
+                              backgroundColor: AppColors.surface,
+                              child: CircleAvatar(
+                                radius: 37,
+                                backgroundColor: AppColors.surfaceVariant,
+                                backgroundImage: user?.avatarUrl != null
+                                    ? NetworkImage(user!.avatarUrl!)
+                                    : null,
+                                child: user?.avatarUrl == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: AppColors.onSurfaceVariant,
+                                      )
+                                    : null,
+                              ),
+                            ),
+                            if (isOwnProfile)
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 12),

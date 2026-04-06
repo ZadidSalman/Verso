@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.model';
+import { uploadImage } from '../services/cloudinary.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROFILE ENDPOINTS
@@ -245,5 +246,65 @@ export async function getPublicProfile(req: Request, res: Response): Promise<voi
   } catch (error) {
     console.error('Get public profile error:', error);
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AVATAR & COVER UPLOAD ENDPOINTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/users/me/avatar
+ * Upload and update avatar image
+ */
+export async function uploadAvatar(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ message: 'Not authenticated.' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: 'No image file uploaded.' });
+      return;
+    }
+
+    const avatarUrl = await uploadImage(req.file, 'avatars');
+
+    await User.findByIdAndUpdate(userId, { avatarUrl });
+
+    res.json({ avatarUrl });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ message: 'Failed to upload avatar. Please try again.' });
+  }
+}
+
+/**
+ * POST /api/users/me/cover
+ * Upload and update cover photo
+ */
+export async function uploadCover(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ message: 'Not authenticated.' });
+      return;
+    }
+
+    if (!req.file) {
+      res.status(400).json({ message: 'No image file uploaded.' });
+      return;
+    }
+
+    const coverUrl = await uploadImage(req.file, 'covers');
+
+    await User.findByIdAndUpdate(userId, { coverUrl });
+
+    res.json({ coverUrl });
+  } catch (error) {
+    console.error('Upload cover error:', error);
+    res.status(500).json({ message: 'Failed to upload cover photo. Please try again.' });
   }
 }

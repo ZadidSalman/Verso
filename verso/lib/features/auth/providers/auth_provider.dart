@@ -220,6 +220,45 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Update avatar URL after upload
+  void updateAvatarUrl(String? avatarUrl) {
+    if (state is AuthAuthenticated) {
+      final currentUser = (state as AuthAuthenticated).user;
+      state = AuthAuthenticated(currentUser.copyWith(avatarUrl: avatarUrl));
+    }
+  }
+
+  /// Upload avatar image
+  Future<bool> uploadAvatar(String filePath) async {
+    try {
+      final avatarUrl = await _repository.uploadAvatar(filePath);
+      updateAvatarUrl(avatarUrl);
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Failed to upload avatar: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Upload cover photo
+  Future<bool> uploadCover(String filePath) async {
+    try {
+      final coverUrl = await _repository.uploadCover(filePath);
+      if (state is AuthAuthenticated) {
+        final currentUser = (state as AuthAuthenticated).user;
+        state = AuthAuthenticated(currentUser.copyWith(avatarUrl: currentUser.avatarUrl));
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Failed to upload cover: $e');
+      }
+      return false;
+    }
+  }
+
   /// Extract error message from DioException
   String _extractErrorMessage(DioException e) {
     final data = e.response?.data;

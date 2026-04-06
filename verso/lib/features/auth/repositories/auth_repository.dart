@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'dart:io';
 import '../../../core/network/dio_client.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../models/auth_user.dart';
@@ -156,5 +157,49 @@ class AuthRepository {
       throw FormatException('Invalid user data in response');
     }
     return AuthUser.fromJson(user);
+  }
+
+  /// Upload avatar image
+  Future<String> uploadAvatar(String filePath) async {
+    final formData = FormData.fromMap({
+      'avatar': await MultipartFile.fromFile(
+        filePath,
+        filename: 'avatar.jpg',
+      ),
+    });
+    final response = await _dio.post(
+      '/api/users/me/avatar',
+      data: formData,
+      options: Options(
+        headers: {'Content-Type': 'multipart/form-data'},
+      ),
+    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw FormatException('Invalid response format');
+    }
+    return data['avatarUrl'] as String;
+  }
+
+  /// Upload cover photo
+  Future<String> uploadCover(String filePath) async {
+    final formData = FormData.fromMap({
+      'cover': await MultipartFile.fromFile(
+        filePath,
+        filename: 'cover.jpg',
+      ),
+    });
+    final response = await _dio.post(
+      '/api/users/me/cover',
+      data: formData,
+      options: Options(
+        headers: {'Content-Type': 'multipart/form-data'},
+      ),
+    );
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw FormatException('Invalid response format');
+    }
+    return data['coverUrl'] as String;
   }
 }

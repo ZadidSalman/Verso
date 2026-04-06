@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   getProfile,
   updateProfile,
@@ -6,6 +7,8 @@ import {
   checkUsername,
   updateFcmToken,
   getPublicProfile,
+  uploadAvatar,
+  uploadCover,
 } from '../controllers/users.controller';
 import {
   followUser,
@@ -17,6 +20,17 @@ import {
 import { optionalAuth, requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
+const imageUpload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public routes
@@ -34,6 +48,12 @@ router.put('/me/onboarding', requireAuth, updateOnboarding);
 
 // FCM token
 router.put('/me/fcm-token', requireAuth, updateFcmToken);
+
+// Avatar upload
+router.post('/me/avatar', requireAuth, imageUpload.single('avatar'), uploadAvatar);
+
+// Cover photo upload
+router.post('/me/cover', requireAuth, imageUpload.single('cover'), uploadCover);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Follow routes (must be before /:username to avoid conflicts)
