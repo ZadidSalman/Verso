@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/app_shapes.dart';
-import '../../../core/theme/app_animations.dart';
 import '../../../shared/models/story_model.dart';
 
 enum _NavDirection { forward, backward, none }
@@ -121,265 +119,207 @@ class _StoryPartScreenState extends ConsumerState<StoryPartScreen>
     ThemeData theme,
     bool disableAnimations,
   ) {
-    final totalParts = _part!.partNumber + 1; // Simplified — in production, get from story
+    final totalParts = _part!.partNumber + 1;
     final hasPrev = _part!.partNumber > 1;
     final hasNext = _part!.partNumber < totalParts;
 
     return Stack(
       children: [
         CustomScrollView(
-      slivers: [
-        // Progress bar at top
-        SliverToBoxAdapter(
-          child: LinearProgressIndicator(
-            value: _part!.partNumber / (_part!.partNumber + 1),
-            backgroundColor: AppColors.surfaceVariant,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            minHeight: 4,
-          ),
-        ),
-
-        // AppBar
-        SliverAppBar(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Part ${_part!.partNumber}',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              Text(
-                _part!.title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.bookmark_border),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              onPressed: () {},
-            ),
-          ],
-        ),
-
-        // Part cover (if set)
-        if (_part!.coverImageUrl != null)
-          SliverToBoxAdapter(
-            child: Container(
-              height: 180,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage(_part!.coverImageUrl!),
-                  fit: BoxFit.cover,
-                ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: LinearProgressIndicator(
+                value: _part!.partNumber / (_part!.partNumber + 1),
+                backgroundColor: AppColors.surfaceVariant,
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                minHeight: 4,
               ),
             ),
-          ),
-
-        // Content
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 160),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              // Part badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: AppShapes.radiusXs,
-                ),
-                child: Text(
-                  'Part ${_part!.partNumber}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+            SliverAppBar(
+              backgroundColor: AppColors.surface,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
               ),
-              const SizedBox(height: 12),
-
-              // Title
-              Text(
-                _part!.title,
-                style: AppTypography.englishPoem.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 24,
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Author row
-              Row(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.surfaceVariant,
-                    child: const Icon(
-                      Icons.person,
-                      size: 16,
+                  Text(
+                    'Part ${_part!.partNumber}',
+                    style: theme.textTheme.labelMedium?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text(
-                    _part!.author?.displayName ??
-                        _part!.author?.username ??
-                        'Unknown',
-                    style: theme.textTheme.bodyMedium?.copyWith(
+                    _part!.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatDate(_part!.publishedAt ?? _part!.createdAt),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-
-              // Mood chips
-              if (_part!.mood.isNotEmpty)
-                Wrap(
-                  spacing: 8,
-                  children: _part!.mood.map((mood) {
-                    final moodColor = AppColors.mood(mood);
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: moodColor.withValues(alpha: 0.12),
-                        borderRadius: AppShapes.radiusXs,
-                      ),
-                      child: Text(
-                        mood[0].toUpperCase() + mood.substring(1),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: moodColor,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.bookmark_border),
+                  onPressed: () {},
                 ),
-              const SizedBox(height: 24),
-
-              // Content
-              Text(
-                _part!.content,
-                style:
-                    (_part!.language == 'en'
-                            ? AppTypography.englishPoem
-                            : AppTypography.banglaPoem)
-                        .copyWith(fontSize: 18, height: 1.8),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+            if (_part!.coverImageUrl != null)
+              SliverToBoxAdapter(
+                child: Container(
+                  height: 180,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: NetworkImage(_part!.coverImageUrl!),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
               ),
-            ]),
-          ),
-        ),
-
-        // Bottom navigation bar
-        SliverFillRemaining(hasScrollBody: false, child: SizedBox.shrink()),
-      ],
-    );
-
-    // A21 Prev/Next navigation tap zones
-    if (!disableAnimations) {
-      // Left tap zone — previous part
-      if (hasPrev) {
-        Positioned(
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 80,
-          child: GestureDetector(
-            onTap: () => _navigateWithAnimation(context, _part!.partNumber - 1),
-            behavior: HitTestBehavior.translucent,
-            child: Container(color: Colors.transparent),
-          ).animate().fadeIn(duration: AppDurations.standard),
-        );
-      }
-
-      // Right tap zone — next part
-      if (hasNext) {
-        Positioned(
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: 80,
-          child: GestureDetector(
-            onTap: () => _navigateWithAnimation(context, _part!.partNumber + 1),
-            behavior: HitTestBehavior.translucent,
-            child: Container(color: Colors.transparent),
-          ).animate().fadeIn(duration: AppDurations.standard),
-        );
-      }
-
-      // Navigation arrow indicators at bottom
-      Positioned(
-        bottom: 100,
-        left: hasPrev ? 16 : 0,
-        right: hasNext ? 16 : 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (hasPrev)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 160),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryContainer,
+                      borderRadius: AppShapes.radiusXs,
                     ),
-                  ],
-                ),
-                child: const Icon(Icons.chevron_left, color: AppColors.primary),
-              ).animate().slideX(begin: -0.2, end: 0).fadeIn(),
-            if (hasNext)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
+                    child: Text(
+                      'Part ${_part!.partNumber}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ],
-                ),
-                child: const Icon(Icons.chevron_right, color: AppColors.primary),
-              ).animate().slideX(begin: 0.2, end: 0).fadeIn(),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _part!.title,
+                    style: AppTypography.englishPoem.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 24,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.surfaceVariant,
+                        child: const Icon(Icons.person, size: 16, color: AppColors.onSurfaceVariant),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _part!.author?.displayName ?? _part!.author?.username ?? 'Unknown',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDate(_part!.publishedAt ?? _part!.createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_part!.mood.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      children: _part!.mood.map((mood) {
+                        final moodColor = AppColors.mood(mood);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: moodColor.withValues(alpha: 0.12),
+                            borderRadius: AppShapes.radiusXs,
+                          ),
+                          child: Text(
+                            mood[0].toUpperCase() + mood.substring(1),
+                            style: theme.textTheme.labelSmall?.copyWith(color: moodColor),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  const SizedBox(height: 24),
+                  Text(
+                    _part!.content,
+                    style: (_part!.language == 'en' ? AppTypography.englishPoem : AppTypography.banglaPoem).copyWith(fontSize: 18, height: 1.8),
+                  ),
+                ]),
+              ),
+            ),
+            SliverFillRemaining(hasScrollBody: false, child: SizedBox.shrink()),
           ],
         ),
-      );
-    }
+        if (!disableAnimations && hasPrev)
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 80,
+            child: GestureDetector(
+              onTap: () => _navigateWithAnimation(context, _part!.partNumber - 1),
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        if (!disableAnimations && hasNext)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: 80,
+            child: GestureDetector(
+              onTap: () => _navigateWithAnimation(context, _part!.partNumber + 1),
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        if (!disableAnimations)
+          Positioned(
+            bottom: 100,
+            left: hasPrev ? 16 : 0,
+            right: hasNext ? 16 : 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (hasPrev)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8)],
+                    ),
+                    child: const Icon(Icons.chevron_left, color: AppColors.primary),
+                  ),
+                if (hasNext)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8)],
+                    ),
+                    child: const Icon(Icons.chevron_right, color: AppColors.primary),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   void _navigateWithAnimation(BuildContext context, int targetPart) {
