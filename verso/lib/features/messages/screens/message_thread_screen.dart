@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -359,7 +359,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                 builder: (context, child) {
                   final progress =
                       (_controller.value + index * 0.2) % 1.0;
-                  final scale = 0.6 + 0.4 * (0.5 + 0.5 * (progress * 2 * 3.14159).sin());
+                  final scale = 0.6 + 0.4 * (0.5 + 0.5 * math.sin(progress * 2 * math.pi));
                   return Transform.scale(
                     scale: scale,
                     child: Container(

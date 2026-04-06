@@ -4,12 +4,15 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 
-const String PUSHER_APP_KEY = String.fromEnvironment('PUSHER_KEY', defaultValue: '');
-const String PUSHER_CLUSTER = String.fromEnvironment('PUSHER_CLUSTER', defaultValue: 'ap2');
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_shapes.dart';
+import '../../../core/theme/app_animations.dart';
+import '../../../shared/models/collab_poem_model.dart';
+import '../providers/collab_provider.dart';
 
-/// Collaborative poem screen with live stanza chain
+bool reducedMotion(BuildContext context) => MediaQuery.of(context).disableAnimations;
 class CollabPoemScreen extends ConsumerStatefulWidget {
   final String poemId;
 
@@ -29,9 +32,6 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen>
   late final AnimationController _branchController;
   final List<String> _activeAuthors = ['You'];
 
-  PusherController? _pusher;
-  String get _channelName => 'collab-${widget.poemId}';
-
   @override
   void initState() {
     super.initState();
@@ -39,52 +39,7 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen>
       vsync: this,
       duration: AppDurations.expressive,
     );
-    _initPusher();
-  }
-
-  Future<void> _initPusher() async {
-    if (PUSHER_APP_KEY.isEmpty) {
-      // No Pusher config — fall back to timer simulation
-      _startPulseTimer();
-      return;
-    }
-
-    _pusher = PusherController.getInstance();
-    try {
-      await _pusher!.init(
-        appKey: PUSHER_APP_KEY,
-        cluster: PUSHER_CLUSTER,
-        onConnectionStateChange: (state, reason) {
-          debugPrint('[Pusher] Connection: $state ($reason)');
-        },
-        onError: (error) {
-          debugPrint('[Pusher] Error: $error');
-        },
-      );
-
-      await _pusher!.subscribe(channelName: _channelName);
-      await _pusher!.bind(eventName: 'stanza_added', callback: (data) {
-        if (mounted) {
-          // Refresh the poem data when a new stanza is added
-          ref.invalidate(collabPoemProvider(widget.poemId));
-        }
-      });
-      await _pusher!.bind(eventName: 'collaborator_joined', callback: (data) {
-        if (mounted) {
-          setState(() {
-            _activeCollaborators = (data['count'] as int?) ?? _activeCollaborators;
-            if (!reducedMotion(context)) {
-              _branchController.forward(from: 0.0);
-            }
-          });
-        }
-      });
-
-      debugPrint('[Pusher] Subscribed to $_channelName');
-    } catch (e) {
-      debugPrint('[Pusher] Init failed: $e — falling back to timer');
-      _startPulseTimer();
-    }
+    _startPulseTimer();
   }
 
   void _startPulseTimer() {
@@ -110,7 +65,6 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen>
     _stanzaController.dispose();
     _collabPulseTimer?.cancel();
     _branchController.dispose();
-    _pusher?.unsubscribe(channelName: _channelName);
     super.dispose();
   }
 

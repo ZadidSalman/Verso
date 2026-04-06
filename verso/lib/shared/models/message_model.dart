@@ -125,10 +125,23 @@ class ConversationModel {
 
 class ConversationUser {
   final String id;
+  final String? avatarUrl;
+  final String? displayName;
+  final String? username;
 
-  const ConversationUser({required this.id});
+  const ConversationUser({
+    required this.id,
+    this.avatarUrl,
+    this.displayName,
+    this.username,
+  });
 
   factory ConversationUser.fromJson(Map<String, dynamic> json) {
-    return ConversationUser(id: json['id'] as String);
+    return ConversationUser(
+      id: json['id'] as String,
+      avatarUrl: json['avatarUrl'] as String?,
+      displayName: json['displayName'] as String?,
+      username: json['username'] as String?,
+    );
   }
 }

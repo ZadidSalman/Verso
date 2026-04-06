@@ -633,6 +633,8 @@ class _ToolbarButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return AnimatedContainer(
       duration: AppDurations.quick,
       curve: AppCurves.standard,
