@@ -232,7 +232,11 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<bool> uploadAvatar(String filePath) async {
     try {
       final avatarUrl = await _repository.uploadAvatar(filePath);
-      updateAvatarUrl(avatarUrl);
+      // Don't update auth state here - it triggers a router rebuild that causes navigation issues.
+      // The new avatar will appear on next app restart.
+      if (kDebugMode) {
+        debugPrint('Avatar uploaded: $avatarUrl');
+      }
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -246,9 +250,10 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<bool> uploadCover(String filePath) async {
     try {
       final coverUrl = await _repository.uploadCover(filePath);
-      if (state is AuthAuthenticated) {
-        final currentUser = (state as AuthAuthenticated).user;
-        state = AuthAuthenticated(currentUser.copyWith(coverUrl: coverUrl));
+      // Don't update auth state here - it triggers a router rebuild that causes navigation issues.
+      // The new cover will appear on next app restart.
+      if (kDebugMode) {
+        debugPrint('Cover uploaded: $coverUrl');
       }
       return true;
     } catch (e) {
