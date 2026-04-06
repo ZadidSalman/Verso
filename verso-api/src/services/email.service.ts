@@ -89,21 +89,29 @@ function wrapTemplate(content: string): string {
 }
 
 async function sendEmail(to: string, subject: string, html: string): Promise<void> {
-  await axios.post(
-    'https://api.brevo.com/v3/smtp/email',
-    {
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    },
-    {
-      headers: {
-        'api-key': process.env.BREVO_API_KEY,
-        'Content-Type': 'application/json',
+  try {
+    const response = await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: { email: FROM_EMAIL, name: FROM_NAME },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
       },
-    }
-  );
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    console.log(`[Brevo] Email sent to ${to}. Status: ${response.status}, Message-ID: ${response.data.messageId}`);
+  } catch (error: any) {
+    const status = error.response?.status;
+    const data = error.response?.data;
+    console.error(`[Brevo] Failed to send email to ${to}. Status: ${status}`, JSON.stringify(data, null, 2));
+    throw error;
+  }
 }
 
 /**
