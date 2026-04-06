@@ -35,14 +35,6 @@ class FeedState {
     );
   }
 }
-    return FeedState(
-      items: items ?? this.items,
-      nextCursor: nextCursor ?? this.nextCursor,
-      hasMore: hasMore ?? this.hasMore,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
 
 /// Feed notifier with cursor pagination and mood/language filters
 class FeedNotifier extends Notifier<FeedState> {
