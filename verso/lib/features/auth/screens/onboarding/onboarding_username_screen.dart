@@ -108,16 +108,8 @@ class _OnboardingUsernameScreenState
       );
 
       if (mounted) {
-        final authState = ref.read(authProvider);
-        if (authState is AuthAuthenticated) {
-          final userData = response.data['user'];
-          if (userData != null) {
-            final updatedUser = AuthUser.fromJson(
-              userData as Map<String, dynamic>,
-            );
-            ref.read(authProvider.notifier).updateUser(updatedUser);
-          }
-        }
+        // Navigate immediately without updating auth state mid-flow.
+        // The user data will be refreshed on next app start via checkAuthStatus.
         context.go(AppRoutes.onboardingMoods);
       }
     } on DioException catch (e) {
