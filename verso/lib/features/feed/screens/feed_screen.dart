@@ -253,7 +253,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               context.go(AppRoutes.feed);
               break;
             case 1:
-              context.go(AppRoutes.discover);
+              context.push(AppRoutes.discover);
               break;
             case 2:
               context.push(AppRoutes.poemEditor);
@@ -262,7 +262,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               // TODO: Messages - not implemented yet
               break;
             case 4:
-              context.go(AppRoutes.profile);
+              context.push(AppRoutes.profile);
               break;
           }
         },

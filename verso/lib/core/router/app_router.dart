@@ -242,6 +242,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             _buildPage(context, state, const StoryEditorScreen()),
       ),
       GoRoute(
+        path: AppRoutes.story,
+        pageBuilder: (context, state) {
+          final storyId = state.pathParameters['id'] ?? '';
+          return _buildPage(context, state, StoryPartScreen(storyId: storyId, partId: '1'));
+        },
+      ),
+      GoRoute(
         path: AppRoutes.storyPart,
         pageBuilder: (context, state) {
           final storyId = state.pathParameters['storyId'] ?? '';
