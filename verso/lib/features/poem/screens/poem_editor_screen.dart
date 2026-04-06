@@ -12,6 +12,7 @@ import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/mood_tag_sheet.dart';
 import '../providers/poem_provider.dart';
+import '../../feed/providers/feed_provider.dart';
 
 /// Poem editor screen
 ///
@@ -123,7 +124,10 @@ class _PoemEditorScreenState extends ConsumerState<PoemEditorScreen> {
             status: 'published',
           );
 
-      if (mounted) {
+      if (mounted && poem.id.isNotEmpty) {
+        // Refresh feed so new poem appears
+        ref.invalidate(feedProvider);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Your words are now part of the world.'),
@@ -131,11 +135,22 @@ class _PoemEditorScreenState extends ConsumerState<PoemEditorScreen> {
           ),
         );
         context.go('${AppRoutes.poem}/${poem.id}');
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Published, but could not open it.'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        context.pop();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[PUBLISH] Error: $e\n$stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not publish. Please try again.')),
+          SnackBar(
+            content: Text('Could not publish. ${e.toString()}'),
+          ),
         );
       }
     } finally {
