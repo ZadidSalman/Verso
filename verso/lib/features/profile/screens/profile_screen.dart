@@ -211,9 +211,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ],
                     ),
                     const SizedBox(height: 16),
-                      // Action buttons
-                      if (!isOwnProfile)
-                        Row(
+                    // Action buttons
+                    if (!isOwnProfile)
+                      Row(
                           children: [
                             Expanded(
                               child: FollowButton(
@@ -237,7 +237,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               ),
                             ),
                           ],
-                        )
+                        ),
                       else
                         Row(
                           children: [
@@ -260,7 +260,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             ),
                           ],
                         ),
-                      ),
                     ],
                   ),
                 ),

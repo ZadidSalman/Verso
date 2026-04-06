@@ -63,30 +63,10 @@ class FeedNotifier extends Notifier<FeedState> {
         type: _currentType,
       );
 
-      // Convert poems to FeedItems and add dummy stories/thoughts
-      List<FeedItem> feedItems = response.items.map((p) => FeedItem.fromPoem(p)).toList();
-      
-      // Add dummy data for testing (stories and thoughts)
-      if (cursor == null && feedItems.isNotEmpty) {
-        // Insert dummy stories and thoughts into the feed
-        final List<FeedItem> allItems = [];
-        for (int i = 0; i < feedItems.length; i++) {
-          allItems.add(feedItems[i]);
-          // Add a thought after every 2 poems
-          if (i % 2 == 1 && i < 8) {
-            allItems.add(FeedItem.dummyThought(i ~/ 2));
-          }
-          // Add a story after every 3 poems
-          if (i % 3 == 2 && i < 9) {
-            allItems.add(FeedItem.dummyStory(i ~/ 3));
-          }
-        }
-        feedItems = allItems;
-      }
-
+      // Use poems directly
       final newItems = cursor == null
-          ? feedItems
-          : [...state.items, ...feedItems];
+          ? response.items
+          : [...state.items, ...response.items];
 
       state = FeedState(
         items: newItems,
