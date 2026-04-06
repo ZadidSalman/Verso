@@ -1,50 +1,44 @@
 import mongoose from 'mongoose';
-import brevo from '@getbrevo/brevo';
-
-const brevoApiKey = process.env.BREVO_API_KEY;
-const apiInstance = new brevo.TransactionalEmailsApi();
-(apiInstance as any).authentications.apiKey.apiKey = brevoApiKey!;
+import axios from 'axios';
 
 const FROM_EMAIL = process.env.FROM_EMAIL ?? 'hello@verso.app';
 const FROM_NAME = 'Verso';
 
-// ─────────────────────────────────────────────────────────────────────────
-// Minimal inline schemas for the digest query
-// ─────────────────────────────────────────────────────────────────────────
+/**
+ * Send the weekly digest email to a single user via Brevo REST API.
+ */
+export async function sendDigestEmail(
+  userId: string,
+): Promise<boolean> {
+  const user = await User.findById(userId).lean() as any;
+  if (!user || !user.digestEnabled) return false;
 
-const PoemSchema = new mongoose.Schema({
-  title: String,
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  likesCount: { type: Number, default: 0 },
-  commentsCount: { type: Number, default: 0 },
-  mood: [String],
-  language: String,
-  createdAt: Date,
-});
+  const data = await buildDigestData(user);
+  if (!data) return false;
 
-const UserSchema = new mongoose.Schema({
-  email: String,
-  username: String,
-  displayName: String,
-  moods: [String],
-  language: { type: String, default: 'en' },
-  lastActiveAt: Date,
-  digestEnabled: { type: Boolean, default: true },
-});
+  const html = renderDigestEmail(data, user.displayName ?? user.username ?? 'Poet');
 
-const Poem = mongoose.models.Poem || mongoose.model('Poem', PoemSchema);
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
-
-// ─────────────────────────────────────────────────────────────────────────
-// Digest generation
-// ─────────────────────────────────────────────────────────────────────────
-
-interface DigestData {
-  topPoems: { title: string; author: string; likesCount: number }[];
-  trendingMoods: string[];
-  newFollowersCount: number;
-  weekStart: string;
-  weekEnd: string;
+  try {
+    await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: { email: FROM_EMAIL, name: FROM_NAME },
+        to: [{ email: user.email, name: user.displayName ?? user.username }],
+        subject: `Your weekly verse · ${data.weekStart} – ${data.weekEnd}`,
+        htmlContent: html,
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return true;
+  } catch (err) {
+    console.error(`[Digest] Failed to send email to ${user.email}:`, err);
+    return false;
+  }
 }
 
 /**
@@ -203,34 +197,6 @@ function renderDigestEmail(data: DigestData, username: string): string {
     </body>
     </html>
   `;
-}
-
-/**
- * Send the weekly digest email to a single user.
- */
-export async function sendDigestEmail(
-  userId: string,
-): Promise<boolean> {
-  const user = await User.findById(userId).lean() as any;
-  if (!user || !user.digestEnabled) return false;
-
-  const data = await buildDigestData(user);
-  if (!data) return false;
-
-  const html = renderDigestEmail(data, user.displayName ?? user.username ?? 'Poet');
-
-  try {
-    await apiInstance.sendTransacEmail({
-      sender: { email: FROM_EMAIL, name: FROM_NAME },
-      to: [{ email: user.email, name: user.displayName ?? user.username }],
-      subject: `Your weekly verse · ${data.weekStart} – ${data.weekEnd}`,
-      htmlContent: html,
-    });
-    return true;
-  } catch (err) {
-    console.error(`[Digest] Failed to send email to ${user.email}:`, err);
-    return false;
-  }
 }
 
 /**
