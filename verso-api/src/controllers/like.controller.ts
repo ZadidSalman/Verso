@@ -25,7 +25,7 @@ export async function likeTarget(req: Request, res: Response): Promise<void> {
     const existing = await Like.findOne({
       userId: req.user!._id,
       targetId,
-      targetType,
+      targetType: targetType as 'poem' | 'storyPart' | 'thought',
     });
 
     if (existing) {
@@ -59,7 +59,7 @@ export async function likeTarget(req: Request, res: Response): Promise<void> {
 export async function unlikeTarget(req: Request, res: Response): Promise<void> {
   try {
     const targetId = req.params.targetId as string;
-    const { targetType } = req.query;
+    const targetType = req.query.targetType as string;
 
     if (!targetId || !targetType) {
       res.status(400).json({ message: 'Target ID and type are required.' });
@@ -74,7 +74,7 @@ export async function unlikeTarget(req: Request, res: Response): Promise<void> {
     const deleted = await Like.findOneAndDelete({
       userId: req.user!._id,
       targetId,
-      targetType,
+      targetType: targetType as 'poem' | 'storyPart' | 'thought',
     });
 
     if (!deleted) {
@@ -83,7 +83,8 @@ export async function unlikeTarget(req: Request, res: Response): Promise<void> {
     }
 
     // Decrement counter on target
-    if (targetType === 'poem') {
+    const tt = targetType as string;
+    if (tt === 'poem') {
       await Poem.findByIdAndUpdate(targetId, { $inc: { likesCount: -1 } });
     }
 
@@ -101,7 +102,7 @@ export async function unlikeTarget(req: Request, res: Response): Promise<void> {
 export async function getLikeStatus(req: Request, res: Response): Promise<void> {
   try {
     const targetId = req.params.targetId as string;
-    const { targetType } = req.query;
+    const targetType = req.query.targetType as string;
 
     if (!targetId || !targetType) {
       res.status(400).json({ message: 'Target ID and type are required.' });
@@ -116,7 +117,7 @@ export async function getLikeStatus(req: Request, res: Response): Promise<void> 
     const like = await Like.findOne({
       userId: req.user!._id,
       targetId,
-      targetType,
+      targetType: targetType as 'poem' | 'storyPart' | 'thought',
     });
 
     res.status(200).json({ isLiked: !!like });
