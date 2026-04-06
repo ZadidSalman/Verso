@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/feed_repository.dart';
 import '../../../shared/models/poem_model.dart';
-import '../../../shared/models/feed_item_model.dart';
 
 /// Provider for FeedRepository
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
@@ -10,7 +9,7 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
 
 /// Feed state with cursor pagination
 class FeedState {
-  final List<FeedItem> items;
+  final List<PoemModel> items;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoading;
@@ -23,11 +22,19 @@ class FeedState {
   });
 
   FeedState copyWith({
-    List<FeedItem>? items,
+    List<PoemModel>? items,
     String? nextCursor,
     bool? hasMore,
     bool? isLoading,
   }) {
+    return FeedState(
+      items: items ?? this.items,
+      nextCursor: nextCursor ?? this.nextCursor,
+      hasMore: hasMore ?? this.hasMore,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
+}
     return FeedState(
       items: items ?? this.items,
       nextCursor: nextCursor ?? this.nextCursor,
