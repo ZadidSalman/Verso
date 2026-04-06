@@ -95,74 +95,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                     ),
-                    // Profile avatar overlapping cover (like FB/LinkedIn)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Center(
-                        child: Transform.translate(
-                          offset: const Offset(0, 40),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.background,
-                                width: 4,
-                              ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 40,
-                              backgroundColor: AppColors.surfaceVariant,
-                              backgroundImage: user?.avatarUrl != null
-                                  ? NetworkImage(user!.avatarUrl!)
-                                  : null,
-                              child: user?.avatarUrl == null
-                                  ? const Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: AppColors.onSurfaceVariant,
-                                    )
-                                  : null,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
                     // Edit button for own profile
-                          if (isOwnProfile) ...[
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.share_outlined),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppColors.surfaceVariant,
-                              ),
+                    if (isOwnProfile)
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 8,
+                        right: 12,
+                        child: IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () {},
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.surface.withValues(
+                              alpha: 0.8,
                             ),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.more_horiz),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppColors.surfaceVariant,
-                              ),
-                            ),
-                          ] else ...[
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  shape: AppShapes.sm,
-                                ),
-                                child: const Text('Edit Profile'),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.share_outlined),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppColors.surfaceVariant,
-                              ),
-                            ),
-                          ],
                           ),
                         ),
                       ),
@@ -171,49 +115,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             ),
 
-            // User info section (reduced top margin since avatar overlaps)
+            // User info section
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 30, 24, 16),
-                child: Column(
-                  children: [
-                    // Name
-                    Text(
-                      user?.displayName ?? user?.username ?? 'Poet',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (user?.username != null)
-                      Text(
-                        '@${user!.username}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+              child: Transform.translate(
+                offset: const Offset(0, -40),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundColor: AppColors.surface,
+                        child: CircleAvatar(
+                          radius: 37,
+                          backgroundColor: AppColors.surfaceVariant,
+                          backgroundImage: user?.avatarUrl != null
+                              ? NetworkImage(user!.avatarUrl!)
+                              : null,
+                          child: user?.avatarUrl == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: AppColors.onSurfaceVariant,
+                                )
+                              : null,
                         ),
                       ),
-                    const SizedBox(height: 8),
-                    // Bio placeholder
-                    Text(
-                      'Writing poetry to express my thoughts and feelings.',
-                      style: theme.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 16),
-                    // Stats row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _StatColumn(label: 'Poems', count: '12'),
-                        _StatColumn(label: 'Followers', count: '234'),
-                        _StatColumn(label: 'Following', count: '89'),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Action buttons
-                    if (!isOwnProfile)
+                      const SizedBox(height: 12),
+                      // Name
+                      Text(
+                        user?.displayName ?? user?.username ?? 'Poet',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (user?.username != null)
+                        Text(
+                          '@${user!.username}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      // Bio placeholder
+                      Text(
+                        'Writing poetry to express my thoughts and feelings.',
+                        style: theme.textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 16),
+                      // Stats row
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _StatColumn(label: 'Poems', count: '12'),
+                          _StatColumn(label: 'Followers', count: '234'),
+                          _StatColumn(label: 'Following', count: '89'),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Action buttons
+                      if (!isOwnProfile)
+                        Row(
                           children: [
                             Expanded(
                               child: FollowButton(
@@ -237,7 +203,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               ),
                             ),
                           ],
-                        ),
+                        )
                       else
                         Row(
                           children: [
