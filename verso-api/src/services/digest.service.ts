@@ -4,6 +4,45 @@ import axios from 'axios';
 const FROM_EMAIL = process.env.FROM_EMAIL ?? 'hello@verso.app';
 const FROM_NAME = 'Verso';
 
+// ─────────────────────────────────────────────────────────────────────────
+// Minimal inline schemas for the digest query
+// ─────────────────────────────────────────────────────────────────────────
+
+const PoemSchema = new mongoose.Schema({
+  title: String,
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  likesCount: { type: Number, default: 0 },
+  commentsCount: { type: Number, default: 0 },
+  mood: [String],
+  language: String,
+  createdAt: Date,
+});
+
+const UserSchema = new mongoose.Schema({
+  email: String,
+  username: String,
+  displayName: String,
+  moods: [String],
+  language: { type: String, default: 'en' },
+  lastActiveAt: Date,
+  digestEnabled: { type: Boolean, default: true },
+});
+
+const Poem = mongoose.models.Poem || mongoose.model('Poem', PoemSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
+
+// ─────────────────────────────────────────────────────────────────────────
+// Digest generation
+// ─────────────────────────────────────────────────────────────────────────
+
+interface DigestData {
+  topPoems: { title: string; author: string; likesCount: number }[];
+  trendingMoods: string[];
+  newFollowersCount: number;
+  weekStart: string;
+  weekEnd: string;
+}
+
 /**
  * Send the weekly digest email to a single user via Brevo REST API.
  */
