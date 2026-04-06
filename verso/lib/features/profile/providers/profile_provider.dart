@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/profile_repository.dart';
-import '../../shared/models/poem_model.dart';
+import '../../../shared/models/poem_model.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository();
