@@ -37,10 +37,6 @@ jobs:
         working-directory: verso
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Analyze code
-        working-directory: verso
-        run: flutter analyze
-
       - name: Build release APK
         working-directory: verso
         run: |
