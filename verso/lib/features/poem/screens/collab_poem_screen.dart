@@ -30,7 +30,7 @@ class _CollabPoemScreenState extends ConsumerState<CollabPoemScreen>
   int _activeCollaborators = 1;
   Timer? _collabPulseTimer;
   late final AnimationController _branchController;
-  final List<String> _activeAuthors = ['You'];
+  List<String> _activeAuthors = ['You'];
 
   @override
   void initState() {
