@@ -26,7 +26,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ImagePicker _picker = ImagePicker();
-  bool _isUploading = false;
 
   @override
   void initState() {
@@ -42,16 +41,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       imageQuality: 80,
     );
     if (image != null && mounted) {
-      setState(() => _isUploading = true);
-      final success = await ref.read(authProvider.notifier).uploadAvatar(image.path);
-      if (mounted) {
-        setState(() => _isUploading = false);
-        if (!success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload avatar')),
-          );
-        }
-      }
+      await ref.read(authProvider.notifier).uploadAvatar(image.path);
     }
   }
 
@@ -63,16 +53,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       imageQuality: 80,
     );
     if (image != null && mounted) {
-      setState(() => _isUploading = true);
-      final success = await ref.read(authProvider.notifier).uploadCover(image.path);
-      if (mounted) {
-        setState(() => _isUploading = false);
-        if (!success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload cover')),
-          );
-        }
-      }
+      await ref.read(authProvider.notifier).uploadCover(image.path);
     }
   }
 
@@ -140,14 +121,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                     ),
-                    // Tap area for cover upload
-                    if (isOwnProfile)
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: _pickAndUploadCover,
-                          child: Container(color: Colors.transparent),
-                        ),
-                      ),
                     // Edit button for own profile
                     if (isOwnProfile)
                       Positioned(
@@ -187,7 +160,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   Text('Change Cover'),
                                 ],
                               ),
-                    ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
