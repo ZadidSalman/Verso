@@ -40,6 +40,7 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
   bool _isSaved = false;
   int _likesCount = 0;
   int _savesCount = 0;
+  int _commentsCount = 0;
 
   late AnimationController _heartController;
   late AnimationController _saveController;
@@ -192,6 +193,9 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
     }
     if (_savesCount == 0 && poem.savesCount > 0) {
       _savesCount = poem.savesCount;
+    }
+    if (_commentsCount == 0 && poem.commentsCount > 0) {
+      _commentsCount = poem.commentsCount;
     }
 
     return SingleChildScrollView(
