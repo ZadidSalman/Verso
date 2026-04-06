@@ -9,7 +9,7 @@ final feedRepositoryProvider = Provider<FeedRepository>((ref) {
 
 /// Feed state with cursor pagination
 class FeedState {
-  final List<PoemModel> items;
+  final List<FeedItem> items;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoading;
@@ -22,7 +22,7 @@ class FeedState {
   });
 
   FeedState copyWith({
-    List<PoemModel>? items,
+    List<FeedItem>? items,
     String? nextCursor,
     bool? hasMore,
     bool? isLoading,

@@ -8,6 +8,7 @@ import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
 import '../providers/feed_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
+import '../../../shared/models/poem_model.dart';
 import '../../../shared/widgets/mood_filter_bar.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
 import '../../../shared/widgets/comment_sheet.dart';
@@ -159,7 +160,37 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   if (index >= feedState.items.length) return null;
 
-                  final poem = feedState.items[index];
+                  final item = feedState.items[index];
+                  // Convert FeedItem to PoemModel for PoemCard
+                  final poem = PoemModel(
+                    id: item.id,
+                    authorId: item.authorId,
+                    author: item.author != null ? PoemAuthor(
+                      displayName: item.author?.displayName,
+                      username: item.author?.username,
+                      avatarUrl: item.author?.avatarUrl,
+                      isVerifiedPoet: item.author?.isVerifiedPoet ?? false,
+                    ) : null,
+                    title: item.title ?? '',
+                    content: item.content,
+                    slug: item.id,
+                    language: item.language,
+                    mood: item.mood,
+                    tags: item.tags,
+                    isAnonymous: false,
+                    isUnsent: false,
+                    status: item.status ?? 'published',
+                    likesCount: item.likesCount ?? 0,
+                    commentsCount: item.commentsCount ?? 0,
+                    savesCount: 0,
+                    readsCount: item.readsCount ?? 0,
+                    trendingScore: item.trendingScore,
+                    wordCount: 0,
+                    lineCount: 0,
+                    publishedAt: item.publishedAt,
+                    createdAt: item.createdAt,
+                    updatedAt: item.updatedAt,
+                  );
                   final delay = Duration(
                     milliseconds: index < 8 ? index * 60 : 0,
                   );

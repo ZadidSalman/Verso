@@ -104,12 +104,16 @@ class _OnboardingUsernameScreenState
     try {
       final response = await DioClient.instance.put(
         '/api/users/me/onboarding',
-        data: {'username': username},
+        data: {'username': username, 'hasCompletedOnboarding': false},
       );
 
       if (mounted) {
-        // Navigate immediately without updating auth state mid-flow.
-        // The user data will be refreshed on next app start via checkAuthStatus.
+        // Update auth state with new username
+        final authState = ref.read(authProvider);
+        if (authState is AuthAuthenticated) {
+          final updatedUser = authState.user.copyWith(username: username);
+          ref.read(authProvider.notifier).updateUser(updatedUser);
+        }
         context.go(AppRoutes.onboardingMoods);
       }
     } on DioException catch (e) {

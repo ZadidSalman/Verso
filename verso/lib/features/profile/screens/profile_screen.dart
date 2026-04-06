@@ -8,9 +8,11 @@ import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
 import '../../../core/router/app_router.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../feed/providers/feed_provider.dart';
+import '../../auth/models/auth_user.dart';
+import '../providers/profile_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
 import '../../../shared/widgets/follow_button.dart';
+import '../../../shared/models/poem_model.dart';
 
 /// Profile screen — shows user info, stats, tabs
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -67,9 +69,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
-    final feedState = ref.watch(feedProvider);
+    final profileState = ref.watch(profileProvider);
     final isOwnProfile = widget.username == null;
     final disableAnimations = MediaQuery.of(context).disableAnimations;
+
+    // Load poems on first build
+    if (profileState.isLoading && profileState.poems.isEmpty) {
+      if (isOwnProfile) {
+        ref.read(profileProvider.notifier).loadMyPoems();
+      } else if (widget.username != null) {
+        ref.read(profileProvider.notifier).loadUserPoems(widget.username!);
+      }
+    }
 
     // Get user info
     final user = isOwnProfile && authState is AuthAuthenticated
@@ -322,7 +333,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           children: [
             // Poems tab
             _PoemsTab(
-              feedState: feedState,
+              profileState: profileState,
               disableAnimations: disableAnimations,
             ),
             // Stories tab
@@ -345,7 +356,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
             // Liked tab
             _PoemsTab(
-              feedState: feedState,
+              profileState: profileState,
               disableAnimations: disableAnimations,
             ),
           ],
@@ -385,14 +396,18 @@ class _StatColumn extends StatelessWidget {
 }
 
 class _PoemsTab extends StatelessWidget {
-  final dynamic feedState;
+  final ProfileState profileState;
   final bool disableAnimations;
 
-  const _PoemsTab({required this.feedState, required this.disableAnimations});
+  const _PoemsTab({required this.profileState, required this.disableAnimations});
 
   @override
   Widget build(BuildContext context) {
-    final items = feedState.items as List;
+    final items = profileState.poems;
+
+    if (items.isEmpty && profileState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     if (items.isEmpty) {
       return Center(
@@ -428,7 +443,36 @@ class _PoemsTab extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8, bottom: 100),
       itemCount: items.length,
       itemBuilder: (context, index) {
-        final poem = items[index];
+        final item = items[index];
+        final poem = PoemModel(
+          id: item.id,
+          authorId: item.authorId,
+          author: item.author != null ? PoemAuthor(
+            displayName: item.author?.displayName,
+            username: item.author?.username,
+            avatarUrl: item.author?.avatarUrl,
+            isVerifiedPoet: item.author?.isVerifiedPoet ?? false,
+          ) : null,
+          title: item.title ?? '',
+          content: item.content,
+          slug: item.id,
+          language: item.language,
+          mood: item.mood,
+          tags: item.tags,
+          isAnonymous: false,
+          isUnsent: false,
+          status: item.status ?? 'published',
+          likesCount: item.likesCount ?? 0,
+          commentsCount: item.commentsCount ?? 0,
+          savesCount: 0,
+          readsCount: item.readsCount ?? 0,
+          trendingScore: item.trendingScore,
+          wordCount: 0,
+          lineCount: 0,
+          publishedAt: item.publishedAt,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        );
         return AnimatedContainer(
           duration: disableAnimations ? Duration.zero : AppDurations.emphasized,
           child: PoemCard(

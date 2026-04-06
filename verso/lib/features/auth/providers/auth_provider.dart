@@ -232,8 +232,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<bool> uploadAvatar(String filePath) async {
     try {
       final avatarUrl = await _repository.uploadAvatar(filePath);
-      // Don't update auth state here - it triggers a router rebuild that causes navigation issues.
-      // The new avatar will appear on next app restart.
+      updateAvatarUrl(avatarUrl);
       if (kDebugMode) {
         debugPrint('Avatar uploaded: $avatarUrl');
       }

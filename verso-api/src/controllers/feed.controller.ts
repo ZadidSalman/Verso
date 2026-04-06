@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { Poem, IPoem } from '../models/Poem.model';
+import { Story, IStory } from '../models/Story.model';
+import { Thought, IThought } from '../models/Thought.model';
 import { User } from '../models/User.model';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPER: Format poem with author info
+// HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function poemWithAuthor(poem: IPoem, author: {
@@ -14,6 +17,7 @@ function poemWithAuthor(poem: IPoem, author: {
 }) {
   return {
     id: poem._id.toString(),
+    type: 'poem',
     authorId: poem.authorId.toString(),
     author: {
       displayName: poem.isAnonymous ? 'Anonymous' : (author.displayName || author.username || 'Unknown'),
@@ -48,9 +52,76 @@ function poemWithAuthor(poem: IPoem, author: {
   };
 }
 
+function storyWithAuthor(story: IStory, author: {
+  displayName?: string;
+  username?: string;
+  avatarUrl?: string;
+  isVerifiedPoet: boolean;
+}) {
+  return {
+    id: story._id.toString(),
+    type: 'story',
+    authorId: story.authorId.toString(),
+    author: {
+      displayName: author.displayName || author.username || 'Unknown',
+      username: author.username || 'unknown',
+      avatarUrl: author.avatarUrl,
+      isVerifiedPoet: author.isVerifiedPoet,
+    },
+    title: story.title,
+    description: story.description,
+    coverImageUrl: story.coverImageUrl,
+    language: story.language,
+    mood: story.mood,
+    tags: story.tags,
+    genre: story.genre,
+    status: story.status,
+    partsCount: story.partsCount,
+    followersCount: story.followersCount,
+    totalReads: story.totalReads,
+    trendingScore: story.trendingScore,
+    publishedAt: story.publishedAt,
+    createdAt: story.createdAt,
+    updatedAt: story.updatedAt,
+  };
+}
+
+function thoughtWithAuthor(thought: IThought, author: {
+  displayName?: string;
+  username?: string;
+  avatarUrl?: string;
+  isVerifiedPoet: boolean;
+}) {
+  return {
+    id: thought._id.toString(),
+    type: 'thought',
+    authorId: thought.authorId.toString(),
+    author: {
+      displayName: author.displayName || author.username || 'Unknown',
+      username: author.username || 'unknown',
+      avatarUrl: author.avatarUrl,
+      isVerifiedPoet: author.isVerifiedPoet,
+    },
+    content: thought.content,
+    visibility: thought.visibility,
+    likesCount: thought.likesCount,
+    createdAt: thought.createdAt,
+    updatedAt: thought.updatedAt,
+  };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// GET paginated feed with mood/language filters
+// GET mixed feed (poems + stories + thoughts)
 // ─────────────────────────────────────────────────────────────────────────────
+
+interface FeedItem {
+  type: 'poem' | 'story' | 'thought';
+  _id: mongoose.Types.ObjectId;
+  authorId: mongoose.Types.ObjectId;
+  publishedAt?: Date;
+  createdAt: Date;
+  trendingScore: number;
+}
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   try {
@@ -64,50 +135,64 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
 
     const limitNum = Math.min(parseInt(limit as string) || 20, 50);
 
-    // Build query
-    const query: Record<string, unknown> = {
-      status: 'published',
-    };
+    // Build queries
+    const poemQuery: Record<string, unknown> = { status: 'published' };
+    const storyQuery: Record<string, unknown> = { status: { $in: ['ongoing', 'completed'] } };
+    const thoughtQuery: Record<string, unknown> = { visibility: 'public' };
 
-    // Filter by mood
     if (mood) {
-      query.mood = { $in: (mood as string).split(',') };
+      const moods = (mood as string).split(',');
+      poemQuery.mood = { $in: moods };
+      storyQuery.mood = { $in: moods };
     }
 
-    // Filter by language
     if (language) {
-      query.language = language;
+      poemQuery.language = language;
+      storyQuery.language = language;
+      thoughtQuery.language = language;
     }
 
-    // Filter by type (poems, stories, thoughts)
+    // Type filters
     if (type === 'poems') {
-      query.videoUrl = { $exists: false };
+      Object.assign(storyQuery, { status: { $exists: false } });
     }
 
     // Cursor pagination
     if (cursor) {
-      query.publishedAt = { $lt: new Date(cursor as string) };
+      const cursorDate = new Date(cursor as string);
+      poemQuery.publishedAt = { $lt: cursorDate };
+      storyQuery.publishedAt = { $lt: cursorDate };
+      thoughtQuery.createdAt = { $lt: cursorDate };
     }
 
-    // Fetch poems sorted by trending score
-    const poems = await Poem.find(query)
-      .sort({ trendingScore: -1, publishedAt: -1 })
-      .limit(limitNum + 1)
-      .select('-__v')
-      .lean();
+    // Fetch items
+    const [poems, stories, thoughts] = await Promise.all([
+      Poem.find(poemQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
+      Story.find(storyQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
+      Thought.find(thoughtQuery).sort({ createdAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
+    ]);
 
-    const hasMore = poems.length > limitNum;
-    if (hasMore) poems.pop();
+    // Collect all items
+    const allItems: FeedItem[] = [
+      ...poems.map(p => ({ type: 'poem' as const, _id: p._id, authorId: p.authorId, publishedAt: p.publishedAt, createdAt: p.createdAt, trendingScore: p.trendingScore || 0 })),
+      ...stories.map(s => ({ type: 'story' as const, _id: s._id, authorId: s.authorId, publishedAt: s.publishedAt, createdAt: s.createdAt, trendingScore: s.trendingScore || 0 })),
+      ...thoughts.map(t => ({ type: 'thought' as const, _id: t._id, authorId: t.authorId, publishedAt: t.createdAt, createdAt: t.createdAt, trendingScore: 0 })),
+    ];
+
+    // Sort by trending score
+    allItems.sort((a, b) => b.trendingScore - a.trendingScore);
+
+    const feedItems = allItems.slice(0, limitNum);
+    const hasMore = allItems.length > limitNum;
 
     // Batch fetch authors
-    const authorIds = [...new Set(poems.map((p) => p.authorId.toString()))];
-    const authors = await User.find(
-      { _id: { $in: authorIds } },
-      'displayName username avatarUrl isVerifiedPoet'
-    ).lean();
+    const authorIds = [...new Set(feedItems.map(item => item.authorId.toString()))];
+    const authors = authorIds.length > 0
+      ? await User.find({ _id: { $in: authorIds.map(id => new mongoose.Types.ObjectId(id)) } }, 'displayName username avatarUrl isVerifiedPoet').lean()
+      : [];
 
     const authorMap = new Map(
-      authors.map((a) => [
+      authors.map(a => [
         a._id.toString(),
         {
           displayName: a.displayName,
@@ -118,19 +203,29 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
       ])
     );
 
-    // Build response
-    const items = poems.map((poem) => {
-      const author = authorMap.get(poem.authorId.toString()) || {
+    // Format response
+    const items = feedItems.map((item) => {
+      const author = authorMap.get(item.authorId.toString()) || {
         displayName: 'Unknown',
         username: 'unknown',
         avatarUrl: undefined,
         isVerifiedPoet: false,
       };
-      return poemWithAuthor(poem as unknown as IPoem, author);
-    });
+
+      if (item.type === 'poem') {
+        const poem = poems.find(p => p._id.toString() === item._id.toString());
+        return poem ? poemWithAuthor(poem as unknown as IPoem, author) : null;
+      } else if (item.type === 'story') {
+        const story = stories.find(s => s._id.toString() === item._id.toString());
+        return story ? storyWithAuthor(story as unknown as IStory, author) : null;
+      } else {
+        const thought = thoughts.find(t => t._id.toString() === item._id.toString());
+        return thought ? thoughtWithAuthor(thought as unknown as IThought, author) : null;
+      }
+    }).filter(Boolean);
 
     const nextCursor = hasMore && items.length > 0
-      ? items[items.length - 1].publishedAt
+      ? (items[items.length - 1] as { publishedAt?: Date; createdAt: Date }).publishedAt?.toISOString() ?? (items[items.length - 1] as { createdAt: Date }).createdAt.toISOString()
       : null;
 
     res.status(200).json({

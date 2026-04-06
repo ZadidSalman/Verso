@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User.model';
+import { Poem } from '../models/Poem.model';
 import { uploadImage } from '../services/cloudinary.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -306,5 +307,92 @@ export async function uploadCover(req: Request, res: Response): Promise<void> {
   } catch (error) {
     console.error('Upload cover error:', error);
     res.status(500).json({ message: 'Failed to upload cover photo. Please try again.' });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET current user's poems
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getMyPoems(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).json({ message: 'Not authenticated.' });
+      return;
+    }
+
+    const { cursor, limit = '20' } = req.query;
+
+    const query: Record<string, unknown> = {
+      authorId: userId,
+      status: 'published',
+    };
+
+    if (cursor) {
+      query.publishedAt = { $lt: new Date(cursor as string) };
+    }
+
+    const poems = await Poem.find(query)
+      .sort({ publishedAt: -1 })
+      .limit(parseInt(limit as string) + 1)
+      .select('-__v')
+      .lean();
+
+    const hasMore = poems.length > parseInt(limit as string);
+    if (hasMore) poems.pop();
+
+    const nextCursor = hasMore && poems.length > 0
+      ? poems[poems.length - 1].publishedAt?.toISOString() ?? null
+      : null;
+
+    // Fetch author info (self)
+    const user = await User.findById(userId).select('displayName username avatarUrl isVerifiedPoet').lean();
+    const author = user ? {
+      displayName: user.displayName,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      isVerifiedPoet: user.isVerifiedPoet,
+    } : null;
+
+    const items = poems.map(poem => ({
+      id: poem._id.toString(),
+      type: 'poem',
+      authorId: poem.authorId.toString(),
+      author,
+      title: poem.title,
+      content: poem.content,
+      slug: poem.slug,
+      language: poem.language,
+      mood: poem.mood,
+      tags: poem.tags,
+      category: poem.category,
+      genre: poem.genre,
+      isAnonymous: poem.isAnonymous,
+      isUnsent: poem.isUnsent,
+      status: poem.status,
+      audioUrl: poem.audioUrl,
+      videoUrl: poem.videoUrl,
+      coverImageUrl: poem.coverImageUrl,
+      likesCount: poem.likesCount,
+      commentsCount: poem.commentsCount,
+      savesCount: poem.savesCount,
+      readsCount: poem.readsCount,
+      trendingScore: poem.trendingScore,
+      wordCount: poem.wordCount,
+      lineCount: poem.lineCount,
+      publishedAt: poem.publishedAt,
+      createdAt: poem.createdAt,
+      updatedAt: poem.updatedAt,
+    }));
+
+    res.status(200).json({
+      items,
+      nextCursor,
+      hasMore,
+    });
+  } catch (error) {
+    console.error('Failed to get my poems:', error);
+    res.status(500).json({ message: 'Could not find your poems.' });
   }
 }

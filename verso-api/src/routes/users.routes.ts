@@ -9,6 +9,7 @@ import {
   getPublicProfile,
   uploadAvatar,
   uploadCover,
+  getMyPoems,
 } from '../controllers/users.controller';
 import {
   followUser,
@@ -42,6 +43,9 @@ router.get('/check-username', optionalAuth, checkUsername);
 // Current user profile
 router.get('/me', requireAuth, getProfile);
 router.put('/me', requireAuth, updateProfile);
+
+// Get current user's poems
+router.get('/me/poems', requireAuth, getMyPoems);
 
 // Onboarding
 router.put('/me/onboarding', requireAuth, updateOnboarding);
