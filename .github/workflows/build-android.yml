@@ -41,10 +41,10 @@ jobs:
         working-directory: verso
         run: flutter analyze
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: verso
         run: |
-          flutter build apk --debug \
+          flutter build apk --release \
             --dart-define=API_URL=https://verso-zjri.onrender.com \
             --dart-define=PUSHER_KEY=${{ secrets.PUSHER_KEY }} \
             --dart-define=PUSHER_CLUSTER=ap2 \
@@ -54,6 +54,6 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk-${{ github.sha }}
-          path: verso/build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 7
+          name: release-apk-${{ github.sha }}
+          path: verso/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
