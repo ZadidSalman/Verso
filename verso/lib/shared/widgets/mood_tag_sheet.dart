@@ -91,10 +91,12 @@ class _MoodTagSheetState extends State<MoodTagSheet> {
 
             // Mood grid
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 controller: scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: AppColors.moodKeys.map((mood) {
+                itemCount: AppColors.moodKeys.length,
+                itemBuilder: (context, index) {
+                  final mood = AppColors.moodKeys[index];
                   final isSelected = _selectedMoods.contains(mood);
                   final moodColor = AppColors.mood(mood);
 
@@ -119,7 +121,6 @@ class _MoodTagSheetState extends State<MoodTagSheet> {
                         ),
                         child: Row(
                           children: [
-                            // Color dot
                             Container(
                               width: 16,
                               height: 16,
@@ -129,7 +130,6 @@ class _MoodTagSheetState extends State<MoodTagSheet> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // Mood name
                             Expanded(
                               child: Text(
                                 _capitalize(mood),
@@ -143,7 +143,6 @@ class _MoodTagSheetState extends State<MoodTagSheet> {
                                 ),
                               ),
                             ),
-                            // Checkmark
                             if (isSelected)
                               Icon(
                                 Icons.check_circle,
@@ -155,7 +154,7 @@ class _MoodTagSheetState extends State<MoodTagSheet> {
                       ),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
 
@@ -258,10 +257,12 @@ class _MoodTagSheetWrapperState extends State<_MoodTagSheetWrapper> {
               ),
             ),
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 controller: scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: AppColors.moodKeys.map((mood) {
+                itemCount: AppColors.moodKeys.length,
+                itemBuilder: (context, index) {
+                  final mood = AppColors.moodKeys[index];
                   final isSelected = _selectedMoods.contains(mood);
                   final moodColor = AppColors.mood(mood);
 
@@ -319,7 +320,7 @@ class _MoodTagSheetWrapperState extends State<_MoodTagSheetWrapper> {
                       ),
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
             SafeArea(

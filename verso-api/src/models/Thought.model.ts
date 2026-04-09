@@ -8,6 +8,7 @@ export interface IThought extends Document {
   _id: mongoose.Types.ObjectId;
   authorId: mongoose.Types.ObjectId;
   content: string;
+  language: 'en' | 'bn';
   visibility: 'public' | 'mutual' | 'private';
   likesCount: number;
   createdAt: Date;
@@ -31,6 +32,11 @@ const ThoughtSchema = new Schema<IThought>(
       required: true,
       maxlength: 280,
     },
+    language: {
+      type: String,
+      enum: ['en', 'bn'],
+      default: 'en',
+    },
     visibility: {
       type: String,
       enum: ['public', 'mutual', 'private'],
@@ -49,6 +55,7 @@ const ThoughtSchema = new Schema<IThought>(
 // Index for feed queries
 ThoughtSchema.index({ authorId: 1, createdAt: -1 });
 ThoughtSchema.index({ visibility: 1, createdAt: -1 });
+ThoughtSchema.index({ visibility: 1, language: 1, createdAt: -1 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MODEL

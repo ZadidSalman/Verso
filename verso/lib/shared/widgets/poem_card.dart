@@ -174,10 +174,7 @@ class PoemCard extends StatelessWidget {
               // Title
               Text(
                 poem.title,
-                style: AppTypography.englishPoem.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
+                style: AppTypography.poemTitle(poem.language),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -187,11 +184,7 @@ class PoemCard extends StatelessWidget {
               // Content preview
               Text(
                 poem.content ?? '',
-                style: AppTypography.englishPoem.copyWith(
-                  fontSize: 14,
-                  color: AppColors.onSurfaceVariant,
-                  height: 1.6,
-                ),
+                style: AppTypography.poemPreview(poem.language),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),

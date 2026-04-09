@@ -76,9 +76,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
                         ),
                         child: Text(
                           unreadCount > 9 ? '9+' : '$unreadCount',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
+                          style: theme.textTheme.labelExtraSmall?.copyWith(
                             color: AppColors.surface,
                           ),
                         ),

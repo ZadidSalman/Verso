@@ -41,6 +41,78 @@ class AppTypography {
   static TextStyle poemBody(String language) =>
       language == 'en' ? englishPoem : banglaPoem;
 
+  /// Poem title style for cards - Playfair (EN) / System (BN) 22sp
+  static TextStyle poemTitle(String language) {
+    if (language == 'en') {
+      return GoogleFonts.playfairDisplay(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        height: 28 / 22,
+        color: AppColors.onSurface,
+      );
+    }
+    return const TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      height: 28 / 22,
+      color: AppColors.onSurface,
+    );
+  }
+
+  /// Poem title style for reader - Playfair (EN) / System (BN) 28sp
+  static TextStyle poemTitleLarge(String language) {
+    if (language == 'en') {
+      return GoogleFonts.playfairDisplay(
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        height: 36 / 28,
+        color: AppColors.onSurface,
+      );
+    }
+    return const TextStyle(
+      fontSize: 28,
+      fontWeight: FontWeight.w600,
+      height: 36 / 28,
+      color: AppColors.onSurface,
+    );
+  }
+
+  /// Story title style for parts - Playfair (EN) / System (BN) 24sp
+  static TextStyle storyTitle(String language) {
+    if (language == 'en') {
+      return GoogleFonts.playfairDisplay(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        height: 32 / 24,
+        color: AppColors.onSurface,
+      );
+    }
+    return const TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      height: 32 / 24,
+      color: AppColors.onSurface,
+    );
+  }
+
+  /// Poem preview style for cards - Playfair (EN) / System (BN) 16sp
+  static TextStyle poemPreview(String language) {
+    if (language == 'en') {
+      return GoogleFonts.playfairDisplay(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 24 / 16,
+        color: AppColors.onSurfaceVariant,
+      );
+    }
+    return const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 24 / 16,
+      color: AppColors.onSurfaceVariant,
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // COMPLETE TEXT THEME
   // ─────────────────────────────────────────────────────────────────────────
@@ -132,6 +204,14 @@ class AppTypography {
       fontWeight: FontWeight.w400,
       height: 16 / 11,
       color: AppColors.onSurfaceVariant,
+    ),
+
+    // Labels - Tiny for badges (9sp)
+    labelExtraSmall: GoogleFonts.dmSans(
+      fontSize: 9,
+      fontWeight: FontWeight.w600,
+      height: 12 / 9,
+      color: AppColors.onSurface,
     ),
   );
 }

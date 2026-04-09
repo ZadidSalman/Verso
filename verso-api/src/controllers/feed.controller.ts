@@ -152,9 +152,20 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
       thoughtQuery.language = language;
     }
 
-    // Type filters
+    // Type filters - when a type is selected, only fetch that type
+    let fetchPoems = true;
+    let fetchStories = true;
+    let fetchThoughts = true;
+    
     if (type === 'poems') {
-      Object.assign(storyQuery, { status: { $exists: false } });
+      fetchStories = false;
+      fetchThoughts = false;
+    } else if (type === 'stories') {
+      fetchPoems = false;
+      fetchThoughts = false;
+    } else if (type === 'thoughts') {
+      fetchPoems = false;
+      fetchStories = false;
     }
 
     // Cursor pagination
@@ -166,11 +177,18 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
     }
 
     // Fetch items
-    const [poems, stories, thoughts] = await Promise.all([
-      Poem.find(poemQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
-      Story.find(storyQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
-      Thought.find(thoughtQuery).sort({ createdAt: -1 }).limit(limitNum + 1).select('-__v').lean(),
-    ]);
+    let poems: IPoem[] = [];
+    let stories: IStory[] = [];
+    let thoughts: IThought[] = [];
+    
+    const poemPromise = fetchPoems ? Poem.find(poemQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean() : Promise.resolve([]);
+    const storyPromise = fetchStories ? Story.find(storyQuery).sort({ trendingScore: -1, publishedAt: -1 }).limit(limitNum + 1).select('-__v').lean() : Promise.resolve([]);
+    const thoughtPromise = fetchThoughts ? Thought.find(thoughtQuery).sort({ createdAt: -1 }).limit(limitNum + 1).select('-__v').lean() : Promise.resolve([]);
+    
+    const [poemsResult, storiesResult, thoughtsResult] = await Promise.all([poemPromise, storyPromise, thoughtPromise]);
+    if (fetchPoems) poems = poemsResult as IPoem[];
+    if (fetchStories) stories = storiesResult as IStory[];
+    if (fetchThoughts) thoughts = thoughtsResult as IThought[];
 
     // Collect all items
     const allItems: FeedItem[] = [

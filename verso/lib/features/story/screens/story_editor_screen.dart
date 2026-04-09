@@ -263,7 +263,7 @@ class _Step1Cover extends StatelessWidget {
               filled: true,
               fillColor: AppColors.surfaceVariant,
             ),
-            style: AppTypography.englishPoem.copyWith(fontSize: 18),
+            style: AppTypography.poemTitle(language),
           ),
           const SizedBox(height: 16),
 
@@ -454,7 +454,7 @@ class _Step3Write extends StatelessWidget {
               filled: true,
               fillColor: AppColors.surfaceVariant,
             ),
-            style: AppTypography.englishPoem.copyWith(fontSize: 16),
+            style: AppTypography.poemPreview(language),
           ),
           const SizedBox(height: 16),
 
@@ -471,11 +471,7 @@ class _Step3Write extends StatelessWidget {
               fillColor: AppColors.surfaceVariant,
               alignLabelWithHint: true,
             ),
-            style:
-                (language == 'en'
-                        ? AppTypography.englishPoem
-                        : AppTypography.banglaPoem)
-                    .copyWith(fontSize: 16),
+            style: AppTypography.poemPreview(language),
             textCapitalization: TextCapitalization.sentences,
           ),
         ],

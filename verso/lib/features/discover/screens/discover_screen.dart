@@ -159,7 +159,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           // Mood Collections section
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Text(
                 'Moods',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -169,13 +169,18 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             ),
           ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: AppColors.moodKeys.map((mood) {
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.2,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final mood = AppColors.moodKeys[index];
                   final moodColor = AppColors.mood(mood);
                   return InkWell(
                     onTap: () {
@@ -196,7 +201,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                         ),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 12,
@@ -207,18 +211,22 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            _capitalize(mood),
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: moodColor,
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              _capitalize(mood),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: moodColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
                     ),
                   );
-                }).toList(),
+                },
+                childCount: AppColors.moodKeys.length,
               ),
             ),
           ),

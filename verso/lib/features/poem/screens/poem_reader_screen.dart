@@ -198,168 +198,177 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
       _commentsCount = poem.commentsCount;
     }
 
-    return SingleChildScrollView(
+    final stanzas = (poem.content ?? '').split('\n\n───\n\n');
+
+    return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 88),
+      children: [
+        const SizedBox(height: 88),
 
-          // Title
-          Text(
-                poem.title,
-                style: AppTypography.englishPoem.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 28,
-                  height: 1.3,
+        // Title
+        Text(
+          poem.title,
+          style: AppTypography.poemTitleLarge(poem.language),
+        )
+        .animate()
+        .fadeIn(
+          duration: disableAnimations
+              ? Duration.zero
+              : AppDurations.emphasized,
+        )
+        .slideY(begin: 0.1, end: 0),
+
+        const SizedBox(height: 16),
+
+        // Author row
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: AppColors.surfaceVariant,
+              backgroundImage: poem.author?.avatarUrl != null
+                  ? NetworkImage(poem.author!.avatarUrl!)
+                  : null,
+              child: poem.author?.avatarUrl == null
+                  ? const Icon(
+                      Icons.person,
+                      size: 16,
+                      color: AppColors.onSurfaceVariant,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  poem.isAnonymous
+                      ? 'Anonymous'
+                      : (poem.author?.displayName ??
+                            poem.author?.username ??
+                            'Unknown'),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              )
-              .animate()
-              .fadeIn(
-                duration: disableAnimations
-                    ? Duration.zero
-                    : AppDurations.emphasized,
-              )
-              .slideY(begin: 0.1, end: 0),
-
-          const SizedBox(height: 16),
-
-          // Author row
-          Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.surfaceVariant,
-                    backgroundImage: poem.author?.avatarUrl != null
-                        ? NetworkImage(poem.author!.avatarUrl!)
-                        : null,
-                    child: poem.author?.avatarUrl == null
-                        ? const Icon(
-                            Icons.person,
-                            size: 16,
-                            color: AppColors.onSurfaceVariant,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        poem.isAnonymous
-                            ? 'Anonymous'
-                            : (poem.author?.displayName ??
-                                  poem.author?.username ??
-                                  'Unknown'),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (!poem.isAnonymous && poem.author?.username != null)
-                        Text(
-                          '@${poem.author!.username}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const Spacer(),
+                if (!poem.isAnonymous && poem.author?.username != null)
                   Text(
-                    _formatDate(poem.publishedAt ?? poem.createdAt),
-                    style: theme.textTheme.labelSmall?.copyWith(
+                    '@${poem.author!.username}',
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                ],
-              )
-              .animate(delay: disableAnimations ? Duration.zero : 100.ms)
-              .fadeIn(
-                duration: disableAnimations
-                    ? Duration.zero
-                    : AppDurations.standard,
+              ],
+            ),
+            const Spacer(),
+            Text(
+              _formatDate(poem.publishedAt ?? poem.createdAt),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
               ),
+            ),
+          ],
+        )
+        .animate(delay: disableAnimations ? Duration.zero : 100.ms)
+        .fadeIn(
+          duration: disableAnimations
+              ? Duration.zero
+              : AppDurations.standard,
+        ),
 
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-          // Mood + Language chips
-          SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    if (poem.mood.isNotEmpty) ...[
-                      for (final mood in poem.mood)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.mood(
-                                mood,
-                              ).withValues(alpha: 0.12),
-                              borderRadius: AppShapes.radiusXs,
-                            ),
-                            child: Text(
-                              _capitalize(mood),
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: AppColors.mood(mood),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                    Container(
+        // Mood + Language chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (poem.mood.isNotEmpty) ...[
+                for (final mood in poem.mood)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 12,
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surfaceVariant,
+                        color: AppColors.mood(mood).withValues(alpha: 0.12),
                         borderRadius: AppShapes.radiusXs,
-                        border: Border.all(color: AppColors.outlineVariant),
                       ),
                       child: Text(
-                        poem.language.toUpperCase(),
+                        _capitalize(mood),
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: AppColors.mood(mood),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                  ],
+                  ),
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
                 ),
-              )
-              .animate(delay: disableAnimations ? Duration.zero : 200.ms)
-              .fadeIn(
-                duration: disableAnimations
-                    ? Duration.zero
-                    : AppDurations.standard,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: AppShapes.radiusXs,
+                  border: Border.all(color: AppColors.outlineVariant),
+                ),
+                child: Text(
+                  poem.language.toUpperCase(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
+            ],
+          ),
+        )
+        .animate(delay: disableAnimations ? Duration.zero : 200.ms)
+        .fadeIn(
+          duration: disableAnimations
+              ? Duration.zero
+              : AppDurations.standard,
+        ),
 
-          const SizedBox(height: 32),
+        const SizedBox(height: 32),
 
-          // Poem body
-          _PoemBody(content: poem.content ?? '', language: poem.language)
-              .animate(delay: disableAnimations ? Duration.zero : 300.ms)
-              .fadeIn(
-                duration: disableAnimations
-                    ? Duration.zero
-                    : AppDurations.emphasized,
+        // Poem body
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: stanzas.length,
+          itemBuilder: (context, index) {
+            final stanza = stanzas[index];
+            final textStyle = AppTypography.poemBody(poem.language);
+            
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                stanza.trim(), 
+                style: textStyle.copyWith(height: 1.8),
               ),
+            );
+          },
+        )
+        .animate(delay: disableAnimations ? Duration.zero : 300.ms)
+        .fadeIn(
+          duration: disableAnimations
+              ? Duration.zero
+              : AppDurations.emphasized,
+        ),
 
-          // Audio player (if available)
-          if (poem.audioUrl != null) ...[
-            const SizedBox(height: 24),
-            AudioPlayerCard(audioUrl: poem.audioUrl!),
-          ],
-
-          const SizedBox(height: 120),
+        // Audio player (if available)
+        if (poem.audioUrl != null) ...[
+          const SizedBox(height: 24),
+          AudioPlayerCard(audioUrl: poem.audioUrl!),
         ],
-      ),
+
+        const SizedBox(height: 120),
+      ],
     );
   }
 
@@ -376,40 +385,6 @@ class _PoemReaderScreenState extends ConsumerState<PoemReaderScreen>
   static String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
-  }
-}
-
-/// Poem body with correct typography per language
-class _PoemBody extends StatelessWidget {
-  final String content;
-  final String language;
-
-  const _PoemBody({required this.content, required this.language});
-
-  @override
-  Widget build(BuildContext context) {
-    final textStyle = language == 'en'
-        ? AppTypography.englishPoem.copyWith(fontSize: 18)
-        : AppTypography.banglaPoem.copyWith(fontSize: 18);
-
-    // Split content by stanza breaks (───)
-    final stanzas = content.split('\n\n───\n\n');
-
-    if (stanzas.length == 1) {
-      // No stanza breaks — render as plain text
-      return Text(content, style: textStyle.copyWith(height: 1.8));
-    }
-
-    // Render each stanza with spacing
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: stanzas.map((stanza) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: Text(stanza.trim(), style: textStyle.copyWith(height: 1.8)),
-        );
-      }).toList(),
-    );
   }
 }
 

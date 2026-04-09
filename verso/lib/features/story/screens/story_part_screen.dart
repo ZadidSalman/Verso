@@ -207,11 +207,7 @@ class _StoryPartScreenState extends ConsumerState<StoryPartScreen>
                   const SizedBox(height: 12),
                   Text(
                     _part!.title,
-                    style: AppTypography.englishPoem.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 24,
-                      height: 1.3,
-                    ),
+                    style: AppTypography.storyTitle(_part!.language),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -237,25 +233,25 @@ class _StoryPartScreenState extends ConsumerState<StoryPartScreen>
                   if (_part!.mood.isNotEmpty)
                     Wrap(
                       spacing: 8,
-                      children: _part!.mood.map((mood) {
-                        final moodColor = AppColors.mood(mood);
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: moodColor.withValues(alpha: 0.12),
-                            borderRadius: AppShapes.radiusXs,
+                      children: [
+                        for (final mood in _part!.mood)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.mood(mood).withValues(alpha: 0.12),
+                              borderRadius: AppShapes.radiusXs,
+                            ),
+                            child: Text(
+                              mood[0].toUpperCase() + mood.substring(1),
+                              style: theme.textTheme.labelSmall?.copyWith(color: AppColors.mood(mood)),
+                            ),
                           ),
-                          child: Text(
-                            mood[0].toUpperCase() + mood.substring(1),
-                            style: theme.textTheme.labelSmall?.copyWith(color: moodColor),
-                          ),
-                        );
-                      }).toList(),
+                      ],
                     ),
                   const SizedBox(height: 24),
                   Text(
                     _part!.content,
-                    style: (_part!.language == 'en' ? AppTypography.englishPoem : AppTypography.banglaPoem).copyWith(fontSize: 18, height: 1.8),
+                    style: AppTypography.poemBody(_part!.language).copyWith(height: 1.8),
                   ),
                 ]),
               ),

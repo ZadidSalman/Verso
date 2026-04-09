@@ -385,17 +385,13 @@ class _PoemEditorScreenState extends ConsumerState<PoemEditorScreen> {
                     TextField(
                       controller: _titleController,
                       focusNode: _titleFocus,
-                      style: AppTypography.englishPoem.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 24,
-                      ),
+                      style: AppTypography.storyTitle(_language),
                       decoration: InputDecoration(
                         hintText: 'A title for your verse...',
-                        hintStyle: AppTypography.englishPoem.copyWith(
+                        hintStyle: AppTypography.storyTitle(_language).copyWith(
                           color: AppColors.onSurfaceVariant.withValues(
                             alpha: 0.5,
                           ),
-                          fontSize: 24,
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,

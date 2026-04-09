@@ -13,12 +13,14 @@ class FeedState {
   final String? nextCursor;
   final bool hasMore;
   final bool isLoading;
+  final String? typeFilter;
 
   const FeedState({
     this.items = const [],
     this.nextCursor,
     this.hasMore = false,
     this.isLoading = false,
+    this.typeFilter,
   });
 
   FeedState copyWith({
@@ -26,12 +28,14 @@ class FeedState {
     String? nextCursor,
     bool? hasMore,
     bool? isLoading,
+    String? typeFilter,
   }) {
     return FeedState(
       items: items ?? this.items,
       nextCursor: nextCursor ?? this.nextCursor,
       hasMore: hasMore ?? this.hasMore,
       isLoading: isLoading ?? this.isLoading,
+      typeFilter: typeFilter ?? this.typeFilter,
     );
   }
 }
@@ -73,6 +77,7 @@ class FeedNotifier extends Notifier<FeedState> {
         nextCursor: response.nextCursor,
         hasMore: response.hasMore,
         isLoading: false,
+        typeFilter: _currentType,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false);

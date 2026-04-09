@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shapes.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/router/app_router.dart';
 import '../providers/feed_provider.dart';
 import '../../../shared/widgets/poem_card.dart';
 import '../../../shared/models/poem_model.dart';
+import '../../../shared/models/thought_model.dart';
 import '../../../shared/widgets/mood_filter_bar.dart';
+import '../../../shared/widgets/type_filter_bar.dart';
 import '../../../shared/widgets/skeleton_loading.dart';
 import '../../../shared/widgets/comment_sheet.dart';
 import '../../../shared/widgets/notification_bell.dart';
@@ -90,7 +93,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             delegate: _MoodFilterHeaderDelegate(
               child: Container(
                 color: AppColors.background,
-                child: const MoodFilterBar(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const MoodFilterBar(),
+                    const TypeFilterBar(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -161,6 +170,24 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                   if (index >= feedState.items.length) return null;
 
                   final item = feedState.items[index];
+                  final delay = Duration(
+                    milliseconds: index < 8 ? index * 60 : 0,
+                  );
+
+                  if (item.type == 'thought') {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: _ThoughtCard(
+                        key: ValueKey(item.id),
+                        content: item.content ?? '',
+                        author: item.author,
+                        likesCount: item.likesCount ?? 0,
+                        createdAt: item.createdAt,
+                        onLike: () => toggleLike(ref, item.id),
+                      ),
+                    );
+                  }
+
                   // Convert FeedItem to PoemModel for PoemCard
                   final poem = PoemModel(
                     id: item.id,
@@ -190,9 +217,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                     publishedAt: item.publishedAt,
                     createdAt: item.createdAt,
                     updatedAt: item.updatedAt,
-                  );
-                  final delay = Duration(
-                    milliseconds: index < 8 ? index * 60 : 0,
                   );
 
                   return Padding(
@@ -304,11 +328,180 @@ class _MoodFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 48;
+  double get maxExtent => 96;
 
   @override
-  double get minExtent => 48;
+  double get minExtent => 96;
 
   @override
   bool shouldRebuild(_MoodFilterHeaderDelegate oldDelegate) => false;
+}
+
+/// Thought card for the feed
+class _ThoughtCard extends StatelessWidget {
+  final String content;
+  final PoemAuthor? author;
+  final int likesCount;
+  final DateTime createdAt;
+  final VoidCallback? onLike;
+
+  const _ThoughtCard({
+    super.key,
+    required this.content,
+    this.author,
+    required this.likesCount,
+    required this.createdAt,
+    this.onLike,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppShapes.radiusMd,
+        border: Border.all(
+          color: AppColors.tertiary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSpacing.space4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Author + timestamp
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.surfaceVariant,
+                backgroundImage: author?.avatarUrl != null
+                    ? NetworkImage(author!.avatarUrl!)
+                    : null,
+                child: author?.avatarUrl == null
+                    ? Icon(
+                        Icons.person_outline,
+                        size: 16,
+                        color: AppColors.onSurfaceVariant,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      author?.displayName ?? author?.username ?? 'Unknown',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (author?.username != null)
+                      Text(
+                        '@${author!.username}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                _formatTimestamp(createdAt),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.space3),
+          // Thought content
+          Text(
+            content,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.space3),
+          // Actions
+          Row(
+            children: [
+              _ActionButton(
+                icon: Icons.favorite_border,
+                label: likesCount.toString(),
+                onTap: onLike,
+                color: AppColors.tertiary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatTimestamp(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    return '${date.day}/${date.month}';
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final Color? color;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final effectiveColor = color ?? AppColors.outline;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppShapes.radiusXs,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: effectiveColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: effectiveColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
