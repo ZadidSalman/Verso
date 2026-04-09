@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_animations.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/router/app_router.dart';
 
 /// Bell icon with A13 bounce animation and unread badge
@@ -49,6 +50,7 @@ class _NotificationBellState extends ConsumerState<NotificationBell>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // TODO: Replace with actual unread count from notification provider
     const unreadCount = 3;
 

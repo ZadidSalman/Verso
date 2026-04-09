@@ -205,13 +205,16 @@ class AppTypography {
       height: 16 / 11,
       color: AppColors.onSurfaceVariant,
     ),
-
-    // Labels - Tiny for badges (9sp)
-    labelExtraSmall: GoogleFonts.dmSans(
-      fontSize: 9,
-      fontWeight: FontWeight.w600,
-      height: 12 / 9,
-      color: AppColors.onSurface,
-    ),
   );
+}
+
+/// Extension to add custom text styles to TextTheme
+extension TextThemeExtension on TextTheme {
+  /// Labels - Tiny for badges (9sp)
+  TextStyle? get labelExtraSmall => GoogleFonts.dmSans(
+        fontSize: 9,
+        fontWeight: FontWeight.w600,
+        height: 12 / 9,
+        color: AppColors.onSurface,
+      );
 }
